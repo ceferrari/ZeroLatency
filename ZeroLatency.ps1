@@ -9,46 +9,47 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 #########################################################
 
 #########################################################
-# STEP 1 - Variables to modify (basic)
+# STEP 1 - Variables to modify (system)
+$HAGS = 0               # Hardware Accelerated GPU Sched.  0 = Off, 1 = On
 $GameMode = 1           # Windows Game Mode                0 = Off, 1 = On
-$NumCores = 6           # Number of cores of the CPU       X = Physical cores (e.g., 6 for a 6C/12T model)
-$RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.g., 0, 2, 4, 6... with SMT on; 0, 1, 2, 3... with SMT off), -1 = Assign from last core backwards
-$RSSQueues = 4          # Number of RSS Queues             0 = Off, X = Number of RSS Queues (Available values: 1, 2, 4 - varies by NIC)
-$Offload = 3            # Checksum Offloads                0 = Off, 1 = Tx only, 2 = Rx only, 3 = Both
-$RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8)
-$TBuffers = 64          # Transmit Buffers                 64 = Min, 4096 = Max (Increments of 8)
-$MTU = 1492             # Maximum Transmission Unit        576 = Min, 1500 = Max (Common values: 1500 for Ethernet, 1492 for PPPoE, 1472 for VPN)
-$DNSProvider = 1        # Domain Name System Provider      1 = Cloudflare, 2 = Google
-$NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
-$Pagefile = 16384       # System Pagefile (Virtual Memory) X = Fixed size in MB (e.g., 16384 for 16GB)
+$Pagefile = 16384       # Pagefile (Virtual Memory)        X = Fixed size in MB (e.g., 16384 for 16GB)
 $Win32PrioSep = 36      # Win32PrioritySeparation          X = Decimal value to set the priority scheduling, which controls how the system distributes CPU time between foreground and background processes
-# * F.B. = Foreground Boost
-# Short Quantum, Fixed Policy
-# - 42 Dec = 2A Hex → F.B. High
-# - 41 Dec = 29 Hex → F.B. Medium
-# - 40 Dec = 28 Hex → F.B. None
-# Short Quantum, Variable Policy
-# - 38 Dec = 26 Hex → F.B. High
-# - 37 Dec = 25 Hex → F.B. Medium
-# - 36 Dec = 24 Hex → F.B. None
-# Long Quantum, Fixed Policy
-# - 26 Dec = 1A Hex → F.B. High
-# - 25 Dec = 19 Hex → F.B. Medium
-# - 24 Dec = 18 Hex → F.B. None
-# Long Quantum, Variable Policy
-# - 22 Dec = 16 Hex → F.B. High
-# - 21 Dec = 15 Hex → F.B. Medium
-# - 20 Dec = 14 Hex → F.B. None
-# References
-# - https://www.youtube.com/watch?v=bqDMG1ZS-Yw
-# - https://www.youtube.com/watch?v=5MF8XjDdr64
+                        # * F.B. = Foreground Boost
+                        # Short Quantum, Fixed Policy
+                        # - 42 Dec = 2A Hex → F.B. High
+                        # - 41 Dec = 29 Hex → F.B. Medium
+                        # - 40 Dec = 28 Hex → F.B. None
+                        # Short Quantum, Variable Policy
+                        # - 38 Dec = 26 Hex → F.B. High
+                        # - 37 Dec = 25 Hex → F.B. Medium
+                        # - 36 Dec = 24 Hex → F.B. None
+                        # Long Quantum, Fixed Policy
+                        # - 26 Dec = 1A Hex → F.B. High
+                        # - 25 Dec = 19 Hex → F.B. Medium
+                        # - 24 Dec = 18 Hex → F.B. None
+                        # Long Quantum, Variable Policy
+                        # - 22 Dec = 16 Hex → F.B. High
+                        # - 21 Dec = 15 Hex → F.B. Medium
+                        # - 20 Dec = 14 Hex → F.B. None
+                        # References
+                        # - https://www.youtube.com/watch?v=bqDMG1ZS-Yw
+                        # - https://www.youtube.com/watch?v=5MF8XjDdr64
 
-# STEP 1.1 - Variables to modify (advanced)
-$ROOLimit = 10          # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
+# STEP 1 - Variables to modify (network basic)
+$NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
+$DNSProvider = 1        # Domain Name System Provider      1 = Cloudflare, 2 = Google
+$RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8, may vary by NIC)
+$TBuffers = 64          # Transmit Buffers                 64 = Min, 4096 = Max (Increments of 8, may vary by NIC)
+$Offloads = 3           # Checksum Offloads                0 = Off, 1 = Tx only, 2 = Rx only, 3 = Both
+$RSSQueues = 4          # Number of RSS Queues             0 = Off, X = Number of RSS Queues (Available values: 1, 2, 4 - varies by NIC)
+$RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.g., 0, 2, 4, 6... with SMT on; 0, 1, 2, 3... with SMT off), -1 = Assign from last core backwards
+
+# STEP 1 - Variables to modify (network advanced)
 $AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental
 $TCPOptions = 1         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
 $TCPRetries = 2         # TCP Retransmission Limits        2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
 $InitialRTO = 1000      # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
+$ROOLimit = 10          # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
 #########################################################
 
 #########################################################
@@ -100,11 +101,14 @@ $ExcludedProcesses = @(
     "presentmondataprovider.exe"
     "processgovernor.exe"
     "processlasso.exe"
+    "riotclientservices.exe"
     "rtss.exe"
     "rtsshooksloader64.exe"
     "steam.exe"
     "steamservice.exe"
     "steamwebhelper.exe"
+    "valorant-win64-shipping.exe"
+    "vgc.exe"
 )
 #########################################################
 
@@ -355,12 +359,11 @@ $UninstalledPackages = @(
 # END - Stop modifying
 #########################################################
 
-# Variables to NOT modify (auto-calculated)
-$MSS = $MTU - 40 - ($TCPOptions -le 1 ? 0 : 12)         # Maximum Segment Size (MTU minus 40 bytes for TCP/IP header minus 0 or 12 bytes for TCP Options)
-$TWS = [math]::Floor(65535 / $MSS) * $MSS               # TCP Window Size (Largest multiple of MSS that doesn't exceed 65535 - limit defined by RFC 1323)
+# Number of *physical* cores of the CPU (e.g., 6 for a 6C/12T model)
+$NumCores = (Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum
 
-# Variables to NOT modify (fixed maps)
-$TAT = @{ # TCP Auto-Tuning Level
+# TCP Auto-Tuning Level
+$ATL = @{
     0 = "disabled"
     1 = "normal"
     2 = "restricted"
@@ -368,27 +371,13 @@ $TAT = @{ # TCP Auto-Tuning Level
     4 = "experimental"
 }
 
-$DNS = @{ # DNS Providers
-    1 = @{ # Cloudflare
-        "ipv4-1" = "1.1.1.1"
-        "ipv4-2" = "1.0.0.1"
-        "ipv6-1" = "2606:4700:4700::1111"
-        "ipv6-2" = "2606:4700:4700::1001"
-    }
-    2 = @{ # Google
-        "ipv4-1" = "8.8.8.8"
-        "ipv4-2" = "8.8.4.4"
-        "ipv6-1" = "2001:4860:4860::8888"
-        "ipv6-2" = "2001:4860:4860::8844"
-    }
-}[$DNSProvider]
-
-$NIC = @{ # NIC Advanced Properties
+# NIC Advanced Properties
+$NIC = @{
     1 = [ordered]@{ # Realtek
         "*EEE" = 0
         "*FlowControl" = 0
         "*InterruptModeration" = 0
-        "*IPChecksumOffloadIPv4" = $Offload
+        "*IPChecksumOffloadIPv4" = $Offloads
         "*JumboPacket" = 1514
         "*LsoV2IPv4" = 0
         "*LsoV2IPv6" = 0
@@ -402,11 +391,11 @@ $NIC = @{ # NIC Advanced Properties
         "*SelectiveSuspend" = 0
         "*SpeedDuplex" = 0
         "*SSIdleTimeout" = 50
-        "*TCPChecksumOffloadIPv4" = $Offload
-        "*TCPChecksumOffloadIPv6" = $Offload
+        "*TCPChecksumOffloadIPv4" = $Offloads
+        "*TCPChecksumOffloadIPv6" = $Offloads
         "*TransmitBuffers" = $TBuffers
-        "*UDPChecksumOffloadIPv4" = $Offload
-        "*UDPChecksumOffloadIPv6" = $Offload
+        "*UDPChecksumOffloadIPv4" = $Offloads
+        "*UDPChecksumOffloadIPv6" = $Offloads
         "*WakeOnMagicPacket" = 0
         "*WakeOnPattern" = 0
         "AdvancedEEE" = 0
@@ -423,7 +412,32 @@ $NIC = @{ # NIC Advanced Properties
     }
 }[$NICBrand]
 
-# Variables to NOT modify (to be filled)
+# DNS Providers
+$DNS = @{
+    1 = @{ # Cloudflare
+        "ipv4-1" = "1.1.1.1"
+        "ipv4-2" = "1.0.0.1"
+        "ipv6-1" = "2606:4700:4700::1111"
+        "ipv6-2" = "2606:4700:4700::1001"
+    }
+    2 = @{ # Google
+        "ipv4-1" = "8.8.8.8"
+        "ipv4-2" = "8.8.4.4"
+        "ipv6-1" = "2001:4860:4860::8888"
+        "ipv6-2" = "2001:4860:4860::8844"
+    }
+}[$DNSProvider]
+
+# Maximum Transmission Unit (576 = Min, 1500 = Max - Common values: 1500 for Ethernet, 1492 for PPPoE, 1472 for VPN)
+$MTU = 1500..576 | Where-Object { ping $DNS[1]["ipv4-1"] -f -l ($_-28) -n 1 -w 300 | Select-String "TTL" } | Select-Object -First 1
+
+# Maximum Segment Size (MTU minus 40 bytes for TCP/IP header minus 0 or 12 bytes for TCP Options)
+$MSS = $MTU - 40 - ($TCPOptions -le 1 ? 0 : 12)
+
+# TCP Window Size (Largest multiple of MSS that doesn't exceed 65535 - Limit defined by RFC 1323)
+$TWS = [math]::Floor(65535 / $MSS) * $MSS
+
+# Auxiliary variables
 $NetshCommands = ""
 
 # Suppress progress bars
@@ -630,7 +644,7 @@ $UninstalledPackages | ForEach-Object {
     "Set-NetOffloadGlobalSetting -PacketCoalescingFilter Disabled"
     "Set-NetOffloadGlobalSetting -ReceiveSegmentCoalescing Disabled"
     "Set-NetOffloadGlobalSetting -ReceiveSideScaling $($RSSQueues -gt 0 ? 'Enabled' : 'Disabled')"
-    "Set-NetOffloadGlobalSetting -TaskOffload $($Offload -gt 0 ? 'Enabled' : 'Disabled')"
+    "Set-NetOffloadGlobalSetting -TaskOffload $($Offloads -gt 0 ? 'Enabled' : 'Disabled')"
 ) | ForEach-Object {
     Invoke-Custom $_ -NewLineBefore
 }
@@ -646,7 +660,7 @@ $AdapterProperties = @(
     "Disable-NetAdapterSriov"
     "Disable-NetAdapterUso"
     "Disable-NetAdapterVmq"
-    "$($Offload -gt 0 ? 'Enable' : 'Disable')-NetAdapterChecksumOffload"
+    "$($Offloads -gt 0 ? 'Enable' : 'Disable')-NetAdapterChecksumOffload"
     "$($RSSQueues -gt 0 ? 'Enable' : 'Disable')-NetAdapterRss"
     Get-RSSCommand -RSSQueues $RSSQueues -RSSCore $RSSCore -NumCores $NumCores
 )
@@ -695,11 +709,11 @@ $AdapterProperties = @(
     "netsh int ip set global slaacmaxdadattempts=1"
     "netsh int ip set global sourcebasedecmp=enabled"
     "netsh int ip set global sourceroutingbehavior=drop"
-    "netsh int ip set global taskoffload=$($Offload -gt 0 ? 'enabled' : 'disabled')"
+    "netsh int ip set global taskoffload=$($Offloads -gt 0 ? 'enabled' : 'disabled')"
     "netsh int ipv6 set global icmpjumbograms=disabled"
     "netsh int ipv6 set global recursivereassembly=disabled"
     "netsh int ipv6 set global slaacprivacylevel=0"
-    "netsh int tcp set global autotuninglevel=$($TAT[$AutoTuning])"
+    "netsh int tcp set global autotuninglevel=$($ATL[$AutoTuning])"
     "netsh int tcp set global ecncapability=disabled"
     "netsh int tcp set global fastopen=enabled"
     "netsh int tcp set global fastopenfallback=enabled"
@@ -1585,6 +1599,10 @@ $(Split-Registry -Content @"
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\WMDRM]
 "DisableOnline"=dword:00000001
 
+; Toggle Hardware-Accelerated GPU Scheduling
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers]
+"HwSchMode"=dword:$('{0:x8}' -f ($HAGS + 1))
+
 ; Disable Interrupt Steering
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PnP\Pci]
 "DisableInterruptSteering"=dword:00000001
@@ -1699,7 +1717,7 @@ $(Split-Registry -Content @"
 "DisableDHCPMediaSense"=dword:00000000
 "DisableIPSourceRouting"=dword:00000002
 "DisableMediaSenseEventLog"=dword:00000001
-"DisableTaskOffload"=dword:0000000$([int]($Offload -le 0))
+"DisableTaskOffload"=dword:0000000$([int]($Offloads -le 0))
 "DisableUserTOSSetting"=dword:00000001
 "EnableAddrMaskReply"=dword:00000000
 "EnableDeadGWDetect"=dword:00000000

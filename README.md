@@ -22,9 +22,10 @@ This script makes significant modifications to your Windows system configuration
 - [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows)
   - The script relies on features exclusive to PowerShell version 7 or newer and is not compatible with the version 5 that comes pre-installed with Windows
   - The recommended method by Microsoft to install it is via WinGet, simply running the following command on Terminal (PowerShell or Command Prompt)
-      ```powershell
-      winget install --id Microsoft.PowerShell --source winget
-      ```
+
+```powershell
+winget install --id Microsoft.PowerShell --source winget
+```
 
 ## 🚀 Usage
 
@@ -40,13 +41,21 @@ This script makes significant modifications to your Windows system configuration
 
 ## 🧩 Extra
 
+This script focuses on maximizing system responsiveness and minimizing latency through automated tweaks, but there are additional tools that can complement its effects. These tools further enhance optimizations that are highly system-specific, hardware-dependent, or otherwise impractical to replicate fully within a single script. For example, utilities like MSI-specific tuning software provide granular control over interrupt handling and core assignment across diverse hardware configurations. Using them alongside this script can help achieve even lower latency and a more finely tuned system without duplicating effort.
+
 ### [Process Lasso](https://bitsum.com)
+
+WIP
 
 ### [Go Interrupt Policy](https://github.com/spddl/GoInterruptPolicy)
 
 Modern and comprehensive utility designed to replace older tools like the [Interrupt Affinity Tool](https://www.techpowerup.com/download/microsoft-interrupt-affinity-tool) and [MSI Tool](https://forums.guru3d.com/threads/windows-line-based-vs-message-signaled-based-interrupts-msi-tool.378044), providing a single solution for optimizing device interrupts in Windows. The software's primary function is to manage Message Signaled Interrupts (MSI), a more efficient, lower latency method of interrupt handling compared to traditional line-based interrupts, by allowing users to control interrupt priorities and assign specific CPU cores affinities to handle device interrupts.
 
+WIP
+
 ### [Custom Resolution Utility](https://www.monitortests.com/forum/Thread-Custom-Resolution-Utility-CRU)
+
+WIP
 
 ## 🤝 Contributing
 
@@ -72,3 +81,4 @@ This project was made possible thanks to the work of others who have explored si
 - [Aurora](https://github.com/IBRHUB/Aurora)
 - [ZOICWARE](https://github.com/zoicware/ZOICWARE)
 - [TCP Optimizer](https://www.speedguide.net/downloads.php)
+- [Khorvie Tech](https://github.com/Khorvie-Tech)
