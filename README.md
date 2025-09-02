@@ -21,7 +21,7 @@ This script makes significant modifications to your Windows system configuration
   - We suggest using [Rufus](https://rufus.ie) to create a bootable USB and customize it to use a local account instead of requiring a Microsoft account
 - [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows)
   - The script relies on features exclusive to PowerShell version 7 or newer and is not compatible with the version 5 that comes pre-installed with Windows
-  - The recommended method by Microsoft to install it is via WinGet, simply running the following command on Terminal (PowerShell or Command Prompt
+  - The recommended method by Microsoft to install it is via WinGet, simply running the following command on Terminal (PowerShell or Command Prompt)
       ```powershell
       winget install --id Microsoft.PowerShell --source winget
       ```
