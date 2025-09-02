@@ -19,6 +19,9 @@ This script makes significant modifications to your Windows system configuration
   - It is recommended to begin with a clean installation of Windows 11. Using it on an earlier version or an already existing installation increases the risk of issues
   - After the installation, ensure your system is fully updated through both Windows Update and the Microsoft Store before running the script
   - We suggest using [Rufus](https://rufus.ie) to create a bootable USB and customize it to use a local account instead of requiring a Microsoft account
+
+        <img width="490" height="39" alt="image" src="https://github.com/user-attachments/assets/b5560f01-4a67-42d9-9eee-ba552db11d0d" />
+
 - [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows)
   - The script relies on features exclusive to PowerShell version 7 or newer and is not compatible with the version 5 that comes pre-installed with Windows
   - The recommended method by Microsoft to install it is via WinGet, simply running the following command on Terminal (PowerShell or Command Prompt)
@@ -28,7 +31,7 @@ This script makes significant modifications to your Windows system configuration
 ## 🚀 Usage
 
 1. Install or update to most recent version of NIC drivers
-   - [Realtek](https://www.realtek.com/Download/List?cate_id=584) (select the "NDIS - Not Support Power Saving" version)
+   - [Realtek](https://www.realtek.com/Download/List?cate_id=584) (select NDIS - Not Support Power Saving)
    - [Intel](https://www.intel.com/content/www/us/en/download/15084/intel-ethernet-adapter-complete-driver-pack.html)
 2. Activate a Power Plan of choice
 3. Download the ZeroLatency.ps1 file
