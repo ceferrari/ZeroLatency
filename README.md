@@ -19,14 +19,12 @@ This script makes significant modifications to your Windows system configuration
   - It is recommended to begin with a clean installation of Windows 11. Using it on an earlier version or an already existing installation increases the risk of issues
   - After the installation, ensure your system is fully updated through both Windows Update and the Microsoft Store before running the script
   - We suggest using [Rufus](https://rufus.ie) to create a bootable USB and customize it to use a local account instead of requiring a Microsoft account
-
-        <img width="490" height="39" alt="image" src="https://github.com/user-attachments/assets/b5560f01-4a67-42d9-9eee-ba552db11d0d" />
-
 - [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows)
   - The script relies on features exclusive to PowerShell version 7 or newer and is not compatible with the version 5 that comes pre-installed with Windows
-  - The recommended method by Microsoft to install it is via WinGet, simply running the following command on Terminal (PowerShell or Command Prompt)
-
-        winget install --id Microsoft.PowerShell --source winget
+  - The recommended method by Microsoft to install it is via WinGet, simply running the following command on Terminal (PowerShell or Command Prompt
+      ```powershell
+      winget install --id Microsoft.PowerShell --source winget
+      ```
 
 ## 🚀 Usage
 
