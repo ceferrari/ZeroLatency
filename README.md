@@ -28,19 +28,26 @@ This script makes significant modifications to your Windows system configuration
 
 ## 🚀 Usage
 
+### Default
+
 1. Install or update to most recent version of NIC drivers
     - [Realtek](https://www.realtek.com/Download/List?cate_id=584) (select NDIS - Not Support Power Saving)
     - [Intel](https://www.intel.com/content/www/us/en/download/15084/intel-ethernet-adapter-complete-driver-pack.html)
-2. Activate a Power Plan of choice
-3. Download the ZeroLatency.ps1 file
-4. Open the script using an IDE of choice (e.g., Visual Studio Code)
-5. Go through the steps, change the variables and save
-6. Run the script by double clicking it
-7. (Optional but highly recommended) Check Extra
+2. Download the following files (if you skip the `.pow` file, the script will fall back to your currently active power plan)
+    - <a href="https://raw.githubusercontent.com/ceferrari/ZeroLatency/refs/heads/main/ZeroLatency.ps1" download>ZeroLatency.ps1</a> (required)
+    - <a href="https://raw.githubusercontent.com/ceferrari/ZeroLatency/refs/heads/main/ZeroLatency.pow" download>ZeroLatency.pow</a> (optional)
+3. Open the `.ps1` file using a text editor (e.g., Notepad, VSCode)
+4. Go through the steps, change the variables and then save the file
+5. Execute the script by double-clicking the `.ps1` file
+6. Check [Extra](#extra) section (optional but highly recommended)
+
+### Reset
+
+WIP
 
 ## 🧩 Extra
 
-This script focuses on maximizing system responsiveness and minimizing latency through automated tweaks, but there are additional tools that can complement its effects. These tools further enhance optimizations that are highly system-specific, hardware-dependent, or otherwise impractical to replicate fully within a single script. For example, utilities like MSI-specific tuning software provide granular control over interrupt handling and core assignment across diverse hardware configurations. Using them alongside this script can help achieve even lower latency and a more finely tuned system without duplicating effort.
+ZeroLatency focuses on maximizing system responsiveness and minimizing latency through automated tweaks, but there are additional tools that can complement its effects. These tools further enhance optimizations that are highly system-specific, hardware-dependent, or otherwise impractical to replicate fully within a single script. For example, utilities like MSI-specific tuning software provide granular control over interrupt handling and core assignment across diverse hardware configurations. Using them alongside this script can help achieve even lower latency and a more finely tuned system without duplicating effort.
 
 ### [Process Lasso](https://bitsum.com)
 
@@ -66,6 +73,16 @@ Sspecialized tool designed to extend the capabilities of your display hardware b
   <summary>WIP</summary>
 </details>
 
+## 📈 Results
+
+### [Bufferbloat](https://www.waveform.com/tools/bufferbloat)
+
+Bufferbloat result obtained from a connection in Brazil and without an SQM router.
+
+### [LatencyMon](https://www.resplendence.com/latencymon)
+
+LatencyMon result obtained after three consecutive Arms Race matches in Counter Strike 2.
+
 ## 🤝 Contributing
 
 Contributions are welcome! 🎉
@@ -75,7 +92,7 @@ Contributions are welcome! 🎉
 
 ## ❤️ Supporting
 
-If you find this project useful, please consider tipping any amount to support the development
+If you find this project useful, please consider tipping any amount to support the development!
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G51KLB1L)
 
