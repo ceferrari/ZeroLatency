@@ -39,7 +39,7 @@ This script makes significant modifications to your Windows system configuration
 3. Open the `.ps1` file using a text editor (e.g., Notepad, VSCode)
 4. Go through the steps, change the variables and then save the file
 5. Execute the script by double-clicking the `.ps1` file
-6. Check [Extra](#extra) section (optional but highly recommended)
+6. Check [Extra](#-extra) section (optional but highly recommended)
 
 ### Reset
 
@@ -77,11 +77,16 @@ Sspecialized tool designed to extend the capabilities of your display hardware b
 
 ### [Bufferbloat](https://www.waveform.com/tools/bufferbloat)
 
-Bufferbloat result obtained from a connection in Brazil and without an SQM router.
+<details>
+  <summary>Bufferbloat result obtained from a connection in Brazil and without an SQM router.</summary>
+  <img width="1228" height="1024" alt="Result_Bufferbloat" src="https://github.com/user-attachments/assets/6ad92eca-5f1a-4afd-9d33-1fc2c1427703" />
+</details>
 
 ### [LatencyMon](https://www.resplendence.com/latencymon)
 
-LatencyMon result obtained after three consecutive Arms Race matches in Counter Strike 2.
+<details>
+  <summary>LatencyMon result obtained after three consecutive Arms Race matches in Counter Strike 2.</summary>
+</details>
 
 ## 🤝 Contributing
 
