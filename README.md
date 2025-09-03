@@ -16,22 +16,21 @@ This script makes significant modifications to your Windows system configuration
 ## 📋 Prerequisites
 
 - [Windows 11](https://www.microsoft.com/en-us/software-download/windows11)
-  - It is recommended to begin with a clean installation of Windows 11. Using it on an earlier version or an already existing installation increases the risk of issues
+  - A clean installation of Windows 11 is strongly recommended for the best results. Using it on an earlier version or an already existing installation increases the risk of issues
   - After the installation, ensure your system is fully updated through both Windows Update and the Microsoft Store before running the script
-  - We suggest using [Rufus](https://rufus.ie) to create a bootable USB and customize it to use a local account instead of requiring a Microsoft account
+  - We suggest using [Rufus](https://rufus.ie) to create a bootable USB from ISO and customize it to use a local account instead of requiring a Microsoft account
 - [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows)
   - The script relies on features exclusive to PowerShell version 7 or newer and is not compatible with the version 5 that comes pre-installed with Windows
   - The recommended method by Microsoft to install it is via WinGet, simply running the following command on Terminal (PowerShell or Command Prompt)
-
-```powershell
-winget install --id Microsoft.PowerShell --source winget
-```
+    ```powershell
+    winget install --id Microsoft.PowerShell --source winget
+    ```
 
 ## 🚀 Usage
 
 1. Install or update to most recent version of NIC drivers
-   - [Realtek](https://www.realtek.com/Download/List?cate_id=584) (select NDIS - Not Support Power Saving)
-   - [Intel](https://www.intel.com/content/www/us/en/download/15084/intel-ethernet-adapter-complete-driver-pack.html)
+    - [Realtek](https://www.realtek.com/Download/List?cate_id=584) (select NDIS - Not Support Power Saving)
+    - [Intel](https://www.intel.com/content/www/us/en/download/15084/intel-ethernet-adapter-complete-driver-pack.html)
 2. Activate a Power Plan of choice
 3. Download the ZeroLatency.ps1 file
 4. Open the script using an IDE of choice (e.g., Visual Studio Code)
@@ -45,17 +44,27 @@ This script focuses on maximizing system responsiveness and minimizing latency t
 
 ### [Process Lasso](https://bitsum.com)
 
-WIP
+Aadvanced software for Windows that optimizes system responsiveness and stability by intelligently managing process priorities and CPU affinities. Its primary function is to prevent system stalls and maintain smooth performance under high load by dynamically adjusting how processes utilize CPU resources, offering both automated optimization and granular manual control.
+
+<details>
+  <summary>WIP</summary>
+</details>
 
 ### [Go Interrupt Policy](https://github.com/spddl/GoInterruptPolicy)
 
-Modern and comprehensive utility designed to replace older tools like the [Interrupt Affinity Tool](https://www.techpowerup.com/download/microsoft-interrupt-affinity-tool) and [MSI Tool](https://forums.guru3d.com/threads/windows-line-based-vs-message-signaled-based-interrupts-msi-tool.378044), providing a single solution for optimizing device interrupts in Windows. The software's primary function is to manage Message Signaled Interrupts (MSI), a more efficient, lower latency method of interrupt handling compared to traditional line-based interrupts, by allowing users to control interrupt priorities and assign specific CPU cores affinities to handle device interrupts.
+Modern and comprehensive utility, serving as a robust replacement for legacy tools such as [Interrupt Affinity Tool](https://www.techpowerup.com/download/microsoft-interrupt-affinity-tool) and [MSI Tool](https://forums.guru3d.com/threads/windows-line-based-vs-message-signaled-based-interrupts-msi-tool.378044), providing a unified solution for optimizing device interrupts on Windows. Its primary function is to manage Message Signaled Interrupts (MSI), a more efficient, lower-latency alternative to traditional line-based interrupts, by allowing users to control interrupt priorities and assign specific CPU cores affinities for handling device interrupts.
 
-WIP
+<details>
+  <summary>WIP</summary>
+</details>
 
 ### [Custom Resolution Utility](https://www.monitortests.com/forum/Thread-Custom-Resolution-Utility-CRU)
 
-WIP
+Sspecialized tool designed to extend the capabilities of your display hardware by allowing users to create custom resolutions, refresh rates, and timing parameters. It provides precise control over monitor settings beyond standard driver options, enabling optimized visual performance and compatibility with non-standard displays or configurations.
+
+<details>
+  <summary>WIP</summary>
+</details>
 
 ## 🤝 Contributing
 
@@ -64,7 +73,7 @@ Contributions are welcome! 🎉
 - Open an issue to report bugs or suggest improvements
 - Fork the repository and submit a Pull Request for new features or fixes
 
-## ☕ Supporting
+## ❤️ Supporting
 
 If you find this project useful, please consider tipping any amount to support the development
 
@@ -80,5 +89,5 @@ This project was made possible thanks to the work of others who have explored si
 - [WinFix](https://github.com/fivance/WinFix)
 - [Aurora](https://github.com/IBRHUB/Aurora)
 - [ZOICWARE](https://github.com/zoicware/ZOICWARE)
-- [TCP Optimizer](https://www.speedguide.net/downloads.php)
 - [Khorvie Tech](https://github.com/Khorvie-Tech)
+- [TCP Optimizer](https://www.speedguide.net/downloads.php)

@@ -88,25 +88,36 @@ $ExcludedFolders = @(
 #########################################################
 # STEP 4 - Add or remove processes to be excluded from Windows Defender Scan and Control Flow Guard
 $ExcludedProcesses = @(
+    # System
     "audiodg.exe"
-    "bitsumsessionagent.exe"
-    "cs2.exe"
+    "csrss.exe"
     "ctfmon.exe"
     "dwm.exe"
-    "latmon.exe"
     "lsass.exe"
-    "msiafterburner.exe"
+    "smss.exe"
+    # Drivers
     "nvcontainer.exe"
     "nvdisplay.container.exe"
+    "razerappengine.exe"
+    "rzenginemon.exe"
+    # Tools
+    "bitsumsessionagent.exe"
+    "latmon.exe"
+    "msiafterburner.exe"
     "presentmondataprovider.exe"
     "processgovernor.exe"
     "processlasso.exe"
-    "riotclientservices.exe"
     "rtss.exe"
     "rtsshooksloader64.exe"
+    # Steam
+    "cs2.exe"
+    "pathofexile_x64steam.exe"
+    "pathofexilesteam.exe"
     "steam.exe"
     "steamservice.exe"
     "steamwebhelper.exe"
+    # Riot
+    "riotclientservices.exe"
     "valorant-win64-shipping.exe"
     "vgc.exe"
 )
