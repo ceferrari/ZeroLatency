@@ -4,6 +4,8 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
+Start-Transcript -Path (Join-Path -Path $PSScriptRoot -ChildPath "ZeroLatency.log") -Append
+
 #########################################################
 # BEGIN - Start modifying
 #########################################################
@@ -440,7 +442,7 @@ $DNS = @{
 }[$DNSProvider]
 
 # Maximum Transmission Unit (576 = Min, 1500 = Max - Common values: 1500 for Ethernet, 1492 for PPPoE, 1472 for VPN)
-$MTU = 1500..576 | Where-Object { ping $DNS[1]["ipv4-1"] -f -l ($_-28) -n 1 -w 300 | Select-String "TTL" } | Select-Object -First 1
+$MTU = 1500..576 | Where-Object { ping $DNS["ipv4-1"] -f -l ($_-28) -n 1 -w 300 | Select-String "TTL" } | Select-Object -First 1
 
 # Maximum Segment Size (MTU minus 40 bytes for TCP/IP header minus 0 or 12 bytes for TCP Options)
 $MSS = $MTU - 40 - ($TCPOptions -le 1 ? 0 : 12)
@@ -583,13 +585,13 @@ $CFGRule = @"
 Write-Custom "Successfully disabled less critical Windows Defender settings" -NewLineBefore
 
 # Windows Defender Scan folders to exclude
-$ExcludedFolders | ForEach-Object {
+$ExcludedFolders | Where-Object { $_ } | ForEach-Object {
     Add-MpPreference -ExclusionPath $_
 }
 Write-Custom "Successfully added to exclude Windows Defender folders" -NewLineBefore
 
 # Windows Defender Scan and Control Flow Guard processes to exclude
-$ExcludedProcesses | ForEach-Object {
+$ExcludedProcesses | Where-Object { $_ } | ForEach-Object {
     Add-MpPreference -ExclusionProcess $_
     $CFGRules += "  <AppConfig Executable=`"$_`">`n$($CFGRule.TrimEnd())`n  </AppConfig>`n"
 }
@@ -605,18 +607,18 @@ $CFGRules
 Write-Custom "Successfully added to exclude Control Flow Guard processes" -NewLineBefore
 
 # Services to stop and disable
-$DisabledServices | ForEach-Object {
+$DisabledServices | Where-Object { $_ } | ForEach-Object {
     Invoke-Custom "Stop-Service $_ -Force" -NewLineBefore
     Invoke-Custom "Set-Service $_ -StartupType Disabled" -NewLineBefore
 }
 
 # Services to set to manual
-$ManualServices | ForEach-Object {
+$ManualServices | Where-Object { $_ } | ForEach-Object {
     Invoke-Custom "Set-Service $_ -StartupType Manual" -NewLineBefore
 }
 
 # Apps and packages to uninstall
-$UninstalledPackages | ForEach-Object {
+$UninstalledPackages | Where-Object { $_ } | ForEach-Object {
     Invoke-Custom "Get-AppxProvisionedPackage -Online | Where-Object { `$_.DisplayName -like '*$_*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName `$_.PackageName }" -NewLineBefore
     Invoke-Custom "Get-AppxPackage -AllUsers | Where-Object { `$_.Name -like '*$_*' } | ForEach-Object { Remove-AppxPackage -AllUsers -Package `$_.PackageFullName }" -NewLineBefore
 }
@@ -808,7 +810,7 @@ Get-NetAdapter -Physical | ForEach-Object {
 $GuidRegex = "[0-9a-fA-F-]{36}"
 $PowerPlanID = [guid]::NewGuid()
 $PowerPlanPath = "$env:TEMP\ZeroLatency.pow"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ceferrari/ZeroLatency/main/ZeroLatency.pow" -OutFile $PowerPlanPath
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ceferrari/ZeroLatency/refs/heads/main/ZeroLatency.pow" -OutFile $PowerPlanPath
 if (Test-Path $PowerPlanPath) {
     powercfg /setactive ((powercfg /list | Where-Object { $_ -notmatch "ZeroLatency" } | Select-Object -Last 1) -match $GuidRegex | ForEach-Object { $matches[0] })
     powercfg /list | Select-String "ZeroLatency" | ForEach-Object { if ($_ -match $GuidRegex) { powercfg /delete $matches[0] } }
@@ -2028,3 +2030,5 @@ Write-Custom "Successfully restarted all physical network adapters" -NewLineBefo
 # Final message
 Write-Host "`nScript complete! Restart recommended to apply all changes`n`nPress any key to exit..." -ForegroundColor DarkMagenta
 $Null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+
+Stop-Transcript
