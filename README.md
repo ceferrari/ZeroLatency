@@ -33,12 +33,12 @@ This script makes significant modifications to your Windows system configuration
 1. Install or update to most recent version of NIC drivers
     - [Realtek](https://www.realtek.com/Download/List?cate_id=584) (select NDIS - Not Support Power Saving)
     - [Intel](https://www.intel.com/content/www/us/en/download/15084/intel-ethernet-adapter-complete-driver-pack.html)
-2. Download the following files (if you skip the `.pow` file, the script will fall back to your currently active power plan)
-    - <a href="https://raw.githubusercontent.com/ceferrari/ZeroLatency/refs/heads/main/ZeroLatency.ps1" download>ZeroLatency.ps1</a> (required)
-    - <a href="https://raw.githubusercontent.com/ceferrari/ZeroLatency/refs/heads/main/ZeroLatency.pow" download>ZeroLatency.pow</a> (optional)
-3. Open the `.ps1` file using a text editor (e.g., Notepad, VSCode)
-4. Go through the steps, change the variables and then save the file
-5. Execute the script by double-clicking the `.ps1` file
+2. Download the [ZeroLatency.ps1](https://github.com/ceferrari/ZeroLatency/blob/main/ZeroLatency.ps1) file (Right click > Save link as...)
+3. Open the file using a text editor (e.g., Notepad or VSCode)
+4. Go through the steps, change the variables and save the file
+5. Execute the script by double-clicking the file and accepting the UAC prompt
+    - You may need to associate `.ps1` files with PowerShell 7 when running it for the first time
+    - PowerShell 7 executable is usually located at `C:\Program Files\PowerShell\7\pwsh.exe`
 6. Check [Extra](#-extra) section (optional but highly recommended)
 
 ### Reset

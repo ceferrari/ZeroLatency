@@ -494,7 +494,7 @@ function Set-Registry {
     param ([string]$Content)
     $TempFile = [System.IO.Path]::GetTempFileName() + ".reg"
     $Content | Out-File "$TempFile" -Encoding ASCII
-    reg import "$TempFile" > $null 2>&1
+    reg import "$TempFile" > $Null 2>&1
     Remove-Item "$TempFile" -Force
 }
 
@@ -804,79 +804,22 @@ Get-NetAdapter -Physical | ForEach-Object {
     }
 }
 
-# Power Plan advanced settings
-@{
-    "4f971e89-eebd-4455-a8de-9e59040e7347" = @{         # Power buttons and lid
-        "a7066653-8d6c-40a8-910e-a1f54b84c7e5" = 2      # Start menu power button
-        "LIDACTION" = 0                                 # When I close the lid
-        "PBUTTONACTION" = 3                             # When I press the power button
-        "SBUTTONACTION" = 0                             # When I press the sleep button
-    }
-    "0012ee47-9041-4b5d-9b77-535fba8b1442" = @{         # Hard disk
-        "6738e2c4-e8a5-4a42-b16a-e040e769756e" = 0      # Turn off hard disk after
-    }
-    "02f815b5-a5cf-4c84-bf20-649d1f75d3d8" = @{         # Internet Explorer
-        "4c793e7d-a264-42e1-87d3-7a0d2f523ccd" = 1      # JavaScript Timer Frequency
-    }
-    "0d7dbae2-4294-402a-ba8e-26777e8488cd" = @{         # Desktop background settings
-        "309dce9b-bef4-4119-9921-a851fb12f0f4" = 1      # Slide show
-    }
-    "19cbb8fa-5279-450e-9fac-8a3d5fedd0c1" = @{         # Wireless Adapter Settings
-        "12bbebe6-58d6-4636-95bb-3217ef867c1a" = 0      # Power Saving Mode
-    }
-    "238c9fa8-0aad-41ed-83f4-97be242c8f20" = @{         # Sleep
-        "29f6c1db-86da-48c5-9fdb-f2b67b1f44da" = 0      # Sleep after
-        "94ac6d29-73ce-41a6-809f-6363ba21b47e" = 0      # Allow hybrid sleep
-        "9d7815a6-7ee4-497e-8888-515a05f02364" = 0      # Hibernate after
-        "bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d" = 0      # Allow wake timer
-    }
-    "2a737441-1930-4402-8d77-b2bebba308a3" = @{         # USB settings
-        "48e6b7a6-50f5-4782-a5d4-53bb8f07e226" = 0      # USB selective suspend setting
-    }
-    "501a4d13-42af-4429-9fd1-a8218c268e20" = @{         # PCI Express
-        "ee12f906-d277-404b-b6da-e5fa1a576df5" = 0      # Link State Power Management
-    }
-    "54533251-82be-4824-96c1-47b60b740d00" = @{
-        "bc5038f7-23e0-4960-96da-33abaf5935ec" = 100    # Maximum processor state
-        "893dee8e-2bef-41e0-89c6-b55d0929964c" = 100    # Minimum processor state
-        "4b92d758-5a24-4851-a470-815d78aee119" = 100    # Processor idle demote threshold
-        "7b224883-b3cc-4d79-819f-8374152cbe7c" = 100    # Processor idle promote threshold
-        "ea062031-0e34-4ff1-9b6d-eb1059334028" = 100    # Processor performance core parking max cores
-        "0cc5b647-c1df-4637-891a-dec35c318583" = 100    # Processor performance core parking min cores
-        "4d2b0152-7d5c-498b-88e2-34345392a2c5" = 5000   # Processor performance time check interval
-    }
-    "7516b95f-f776-4464-8c53-06167f40cc99" = @{         # Display
-        "fbd9aa66-9553-4097-ba44-ed6e9d65eab8" = 0      # Enable adaptive brightness
-        "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e" = 300    # Turn off display after
-        "f1fbfde2-a960-4165-9f88-50667911ce96" = 100    # Dimmed display brightness
-        "aded5e82-b909-4619-9949-f5d71dac0bcb" = 100    # Display brightness
-    }
-    "9596fb26-9850-41fd-ac3e-f7c3c00afd4b" = @{         # Multimedia settings
-        "03680956-93bc-4294-bba6-4e0f09bb717f" = 1      # When sharing media
-        "10778347-1370-4ee0-8bbd-33bdacaade49" = 1      # Video playback quality bias
-        "34c7b99f-9a6d-4b3c-8dc7-b6693b78cef4" = 0      # When playing video
-    }
-    "e73a048d-bf27-4f12-9731-8b2076e8891f" = @{         # Battery
-        "bcded951-187b-4d05-bccc-f7e51960c258" = 1      # Low battery notification
-        "8183ba9a-e910-48da-8769-14ae6dc1170a" = 15     # Low battery level
-        "d8742dcb-3e6a-4b3c-b3fe-374623cdcf06" = 0      # Low battery action
-        "5dbb7c9f-38e9-40d2-9749-4f8a0e9f640f" = 1      # Critical battery notification
-        "9a66d8d7-4ff7-4ef9-b5a2-5a326ca2a469" = 5      # Critical battery level
-        "637ea02f-bbcb-4015-8e2c-a1c7b9c0b546" = 1      # Critical battery action
-        "f3c5027d-cd16-4930-aa6b-90db844a8f00" = 10     # Reserve battery level
-    }
-}.GetEnumerator() | ForEach-Object {
-    $Subgroup = $_.Key
-    $_.Value.GetEnumerator() | ForEach-Object {
-        if ($_.Key -as [guid]) {
-            Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerSettings\$Subgroup\$($_.Key)" -Name "Attributes" -Type "DWord" -Value 2
-        }
-        powercfg /setacvalueindex SCHEME_CURRENT $Subgroup $_.Key $_.Value
-        powercfg /setdcvalueindex SCHEME_CURRENT $Subgroup $_.Key $_.Value
-    }
+# Power Plan download, import and activation
+$GuidRegex = "[0-9a-fA-F-]{36}"
+$PowerPlanID = [guid]::NewGuid()
+$PowerPlanPath = "$env:TEMP\ZeroLatency.pow"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ceferrari/ZeroLatency/main/ZeroLatency.pow" -OutFile $PowerPlanPath
+if (Test-Path $PowerPlanPath) {
+    powercfg /setactive ((powercfg /list | Where-Object { $_ -notmatch "ZeroLatency" } | Select-Object -Last 1) -match $GuidRegex | ForEach-Object { $matches[0] })
+    powercfg /list | Select-String "ZeroLatency" | ForEach-Object { if ($_ -match $GuidRegex) { powercfg /delete $matches[0] } }
+    powercfg /import $PowerPlanPath $PowerPlanID
+    powercfg /changename $PowerPlanID "ZeroLatency" "Prioritizes maximum responsiveness and lowest latency."
+    powercfg /setactive $PowerPlanID
+    powercfg /hibernate off
+    Write-Custom "Successfully imported and activated ZeroLatency Power Plan" -NewLineBefore
+} else {
+    Write-Custom "Failed to download ZeroLatency Power Plan" -NewLineBefore
 }
-powercfg /hibernate off
-Write-Custom "Successfully configured Power Plan advanced settings" -NewLineBefore
 
 # Power-Saving and Wake on Magic Packet
 $WompInstances = Get-CimInstance -ClassName MSNdis_DeviceWakeOnMagicPacketOnly -Namespace root/wmi | Group-Object -Property InstanceName -AsHashTable -AsString
@@ -2084,4 +2027,4 @@ Write-Custom "Successfully restarted all physical network adapters" -NewLineBefo
 
 # Final message
 Write-Host "`nScript complete! Restart recommended to apply all changes`n`nPress any key to exit..." -ForegroundColor DarkMagenta
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+$Null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
