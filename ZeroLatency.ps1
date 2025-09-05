@@ -45,7 +45,7 @@ $RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max 
 $TBuffers = 64          # Transmit Buffers                 64 = Min, 4096 = Max (Increments of 8, may vary by NIC)
 $Offloads = 3           # Checksum Offloads                0 = Off, 1 = Tx only, 2 = Rx only, 3 = Both
 $RSSQueues = 4          # Number of RSS Queues             0 = Off, X = Number of RSS Queues (Available values: 1, 2, 4 - varies by NIC)
-$RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.g., 0, 2, 4, 6... with SMT on; 0, 1, 2, 3... with SMT off), -1 = Assign from last core backwards
+$RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.g., 0, 2, 4, 6... with HT/SMT on; 0, 1, 2, 3... otherwise), -1 = Assign from last core backwards
 
 # STEP 1 - Variables to modify (network advanced)
 $AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental
