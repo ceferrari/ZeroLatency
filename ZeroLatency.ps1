@@ -4,6 +4,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
+# Writes all output to a .log file in the same directory as the script
 Start-Transcript -Path (Join-Path -Path $PSScriptRoot -ChildPath "ZeroLatency.log") -Append
 
 #########################################################
@@ -458,18 +459,14 @@ $ProgressPreference = "SilentlyContinue"
 
 # Functions
 function Invoke-Custom {
-    param([string]$Command, [switch]$NewLineBefore)
-    if ($NewLineBefore) { Write-Host "" }
-    Write-Host "==> " -NoNewline -ForegroundColor DarkCyan
-    Write-Host $Command -ForegroundColor Cyan
+    param([string]$Command)
+    Write-Host "`n`e[0;36m==> `e[1;36m$Command`e[0m"
     Invoke-Expression $Command
 }
 
 function Write-Custom {
-    param([string]$Text, [switch]$NewLineBefore)
-    if ($NewLineBefore) { Write-Host "" }
-    Write-Host "==> " -NoNewline -ForegroundColor DarkBlue
-    Write-Host $Text -ForegroundColor Blue
+    param([string]$Text)
+    Write-Host "`n`e[0;34m==> `e[1;34m$Text`e[0m"
 }
 
 function New-Task {
@@ -545,7 +542,7 @@ Write-Custom "Successfully cleared temporary files"
     }
 }
 if (Test-Path "HKCU:\Software\Valve\Steam") { Remove-Item "$((Get-ItemProperty -Path 'HKCU:\Software\Valve\Steam').SteamPath)\steamapps\shadercache" -Recurse -Force -ErrorAction SilentlyContinue }
-Write-Custom "Successfully cleared DirectX shader cache" -NewLineBefore
+Write-Custom "Successfully cleared DirectX shader cache"
 
 # Control Flow Guard rules
 $CFGRules = ""
@@ -582,20 +579,20 @@ $CFGRule = @"
 ) | ForEach-Object {
     & $_
 }
-Write-Custom "Successfully disabled less critical Windows Defender settings" -NewLineBefore
+Write-Custom "Successfully disabled less critical Windows Defender settings"
 
 # Windows Defender Scan folders to exclude
 $ExcludedFolders | Where-Object { $_ } | ForEach-Object {
     Add-MpPreference -ExclusionPath $_
 }
-Write-Custom "Successfully added to exclude Windows Defender folders" -NewLineBefore
+Write-Custom "Successfully added to exclude Windows Defender folders"
 
 # Windows Defender Scan and Control Flow Guard processes to exclude
 $ExcludedProcesses | Where-Object { $_ } | ForEach-Object {
     Add-MpPreference -ExclusionProcess $_
     $CFGRules += "  <AppConfig Executable=`"$_`">`n$($CFGRule.TrimEnd())`n  </AppConfig>`n"
 }
-Write-Custom "Successfully added to exclude Windows Defender processes" -NewLineBefore
+Write-Custom "Successfully added to exclude Windows Defender processes"
 
 # Control Flow Guard settings
 Set-ControlFlowGuard -Content @"
@@ -604,23 +601,23 @@ Set-ControlFlowGuard -Content @"
 $CFGRules
 </MitigationPolicy>
 "@
-Write-Custom "Successfully added to exclude Control Flow Guard processes" -NewLineBefore
+Write-Custom "Successfully added to exclude Control Flow Guard processes"
 
 # Services to stop and disable
 $DisabledServices | Where-Object { $_ } | ForEach-Object {
-    Invoke-Custom "Stop-Service $_ -Force" -NewLineBefore
-    Invoke-Custom "Set-Service $_ -StartupType Disabled" -NewLineBefore
+    Invoke-Custom "Stop-Service $_ -Force"
+    Invoke-Custom "Set-Service $_ -StartupType Disabled"
 }
 
 # Services to set to manual
 $ManualServices | Where-Object { $_ } | ForEach-Object {
-    Invoke-Custom "Set-Service $_ -StartupType Manual" -NewLineBefore
+    Invoke-Custom "Set-Service $_ -StartupType Manual"
 }
 
 # Apps and packages to uninstall
 $UninstalledPackages | Where-Object { $_ } | ForEach-Object {
-    Invoke-Custom "Get-AppxProvisionedPackage -Online | Where-Object { `$_.DisplayName -like '*$_*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName `$_.PackageName }" -NewLineBefore
-    Invoke-Custom "Get-AppxPackage -AllUsers | Where-Object { `$_.Name -like '*$_*' } | ForEach-Object { Remove-AppxPackage -AllUsers -Package `$_.PackageFullName }" -NewLineBefore
+    Invoke-Custom "Get-AppxProvisionedPackage -Online | Where-Object { `$_.DisplayName -like '*$_*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName `$_.PackageName }"
+    Invoke-Custom "Get-AppxPackage -AllUsers | Where-Object { `$_.Name -like '*$_*' } | ForEach-Object { Remove-AppxPackage -AllUsers -Package `$_.PackageFullName }"
 }
 
 # System settings (Timers, Data Execution Prevention, Pagefile, PowerShell)
@@ -634,7 +631,7 @@ $UninstalledPackages | Where-Object { $_ } | ForEach-Object {
     "winget upgrade --all --accept-package-agreements --accept-source-agreements"
     "setx POWERSHELL_TELEMETRY_OPTOUT 1"
 ) | ForEach-Object {
-    Invoke-Custom $_ -NewLineBefore
+    Invoke-Custom $_
 }
 
 # Windows Memory Management Agent
@@ -646,7 +643,7 @@ $UninstalledPackages | Where-Object { $_ } | ForEach-Object {
     "Disable-MMAgent -PageCombining"
     "Set-MMAgent -MaxOperationAPIFiles 1"
 ) | ForEach-Object {
-    Invoke-Custom ($_ -match "^Disable-MMAgent" ? "$_ -ErrorAction SilentlyContinue" : $_) -NewLineBefore
+    Invoke-Custom ($_ -match "^Disable-MMAgent" ? "$_ -ErrorAction SilentlyContinue" : $_)
 }
 
 # Global network settings
@@ -659,7 +656,7 @@ $UninstalledPackages | Where-Object { $_ } | ForEach-Object {
     "Set-NetOffloadGlobalSetting -ReceiveSideScaling $($RSSQueues -gt 0 ? 'Enabled' : 'Disabled')"
     "Set-NetOffloadGlobalSetting -TaskOffload $($Offloads -gt 0 ? 'Enabled' : 'Disabled')"
 ) | ForEach-Object {
-    Invoke-Custom $_ -NewLineBefore
+    Invoke-Custom $_
 }
 
 # Adapter network settings
@@ -691,7 +688,7 @@ $AdapterProperties = @(
     "ipconfig /release"
     "ipconfig /renew"
 ) | ForEach-Object {
-    Invoke-Custom $_ -NewLineBefore
+    Invoke-Custom $_
 }; Write-Host ""
 
 # Network settings optimization
@@ -783,26 +780,26 @@ Get-NetAdapter -Physical | ForEach-Object {
         $Z = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$Z store=persistent"; Invoke-Custom $Z; $NetshCommands += "$Z`n"
     }
     Invoke-Custom "Get-NetAdapterBinding -Name '$($Adapter.Name)' | Where-Object { `$_.ComponentID -notin @('ms_tcpip', 'ms_tcpip6') } | Disable-NetAdapterBinding"
-    Invoke-Custom "Reset-NetAdapterAdvancedProperty -NoRestart -Name '$($Adapter.Name)' -DisplayName '*'" -NewLineBefore
+    Invoke-Custom "Reset-NetAdapterAdvancedProperty -NoRestart -Name '$($Adapter.Name)' -DisplayName '*'"
     $AdapterProperties | ForEach-Object {
-        Invoke-Custom "$_ -NoRestart -Name '$($Adapter.Name)'" -NewLineBefore
+        Invoke-Custom "$_ -NoRestart -Name '$($Adapter.Name)'"
     }
     $NIC.GetEnumerator() | ForEach-Object {
-        Invoke-Custom "Set-NetAdapterAdvancedProperty -NoRestart -Name '$($Adapter.Name)' -RegistryKeyword $($_.Key) -RegistryValue $($_.Value)" -NewLineBefore
+        Invoke-Custom "Set-NetAdapterAdvancedProperty -NoRestart -Name '$($Adapter.Name)' -RegistryKeyword $($_.Key) -RegistryValue $($_.Value)"
     }
     Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces" | ForEach-Object {
         if ("Tcpip_$($Adapter.InterfaceGuid)" -ne $_.PSChildName) { return }
         Set-ItemProperty -Path $_.PSPath -Name "NetbiosOptions" -Type "DWord" -Value 2
-        Write-Custom "Successfully disabled NetBIOS on $($Adapter.Name) $($Adapter.InterfaceGuid)" -NewLineBefore
+        Write-Custom "Successfully disabled NetBIOS on $($Adapter.Name) $($Adapter.InterfaceGuid)"
     }
     Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | ForEach-Object {
         if ($Adapter.InterfaceGuid -ne $_.PSChildName) { return }
         Set-ItemProperty -Path $_.PSPath -Name "TcpAckFrequency" -Type "DWord" -Value 1
         Set-ItemProperty -Path $_.PSPath -Name "TcpDelAckTicks"  -Type "DWord" -Value 0
         Set-ItemProperty -Path $_.PSPath -Name "TCPNoDelay"      -Type "DWord" -Value 1
-        Write-Custom "Successfully disabled Nagle's on $($Adapter.Name) $($Adapter.InterfaceGuid)" -NewLineBefore
+        Write-Custom "Successfully disabled Nagle's on $($Adapter.Name) $($Adapter.InterfaceGuid)"
         Set-ItemProperty -Path $_.PSPath -Name "TCPInitialRtt"   -Type "DWord" -Value $InitialRTO
-        Write-Custom "Successfully fixed InitialRTO on $($Adapter.Name) $($Adapter.InterfaceGuid)" -NewLineBefore
+        Write-Custom "Successfully fixed InitialRTO on $($Adapter.Name) $($Adapter.InterfaceGuid)"
     }
 }
 
@@ -814,13 +811,13 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ceferrari/ZeroLatency/
 if (Test-Path $PowerPlanPath) {
     powercfg /setactive ((powercfg /list | Where-Object { $_ -notmatch "ZeroLatency" } | Select-Object -Last 1) -match $GuidRegex | ForEach-Object { $matches[0] })
     powercfg /list | Select-String "ZeroLatency" | ForEach-Object { if ($_ -match $GuidRegex) { powercfg /delete $matches[0] } }
-    powercfg /import $PowerPlanPath $PowerPlanID
+    powercfg /import $PowerPlanPath $PowerPlanID | Out-Null
     powercfg /changename $PowerPlanID "ZeroLatency" "Prioritizes maximum responsiveness and lowest latency."
     powercfg /setactive $PowerPlanID
     powercfg /hibernate off
-    Write-Custom "Successfully imported and activated ZeroLatency Power Plan" -NewLineBefore
+    Write-Custom "Successfully imported and activated ZeroLatency Power Plan"
 } else {
-    Write-Custom "Failed to download ZeroLatency Power Plan" -NewLineBefore
+    Write-Custom "Failed to download ZeroLatency Power Plan"
 }
 
 # Power-Saving and Wake on Magic Packet
@@ -839,7 +836,7 @@ Get-CimInstance Win32_PnPEntity | ForEach-Object {
         Set-CimInstance -InputObject $PwsvInstances[$_][0] -Property @{ Enable = $False }
     }
 }
-Write-Custom "Successfully disabled Power-Saving and Wake on Magic Packet for applicable devices" -NewLineBefore
+Write-Custom "Successfully disabled Power-Saving and Wake on Magic Packet for applicable devices"
 
 # Selective Suspend
 $SelsusProps = @{
@@ -858,7 +855,7 @@ Get-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Enum\USB\*\*\Device Parameters" |
         }
     }
 }
-Write-Custom "Successfully disabled Selective Suspend for applicable devices" -NewLineBefore
+Write-Custom "Successfully disabled Selective Suspend for applicable devices"
 
 # Background Access for UWP applications
 Get-ChildItem -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" | Where-Object { $_.PSChildName -notmatch "NVIDIA|Realtek|OneDrive" } | ForEach-Object {
@@ -870,7 +867,7 @@ Get-ChildItem -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundA
     Set-ItemProperty -Path $_.PSPath -Name "SleepDisabled"           -Type "DWord" -Value 1
     Set-ItemProperty -Path $_.PSPath -Name "SleepIgnoreBatterySaver" -Type "DWord" -Value 0
 }
-Write-Custom "Successfully disabled Background Access for UWP applications" -NewLineBefore
+Write-Custom "Successfully disabled Background Access for UWP applications"
 
 # Registry helpers
 # Disable Settings > Accounts > Sign-in options > Use my sign-in info to automatically finish setting up after an update or restart
@@ -987,7 +984,7 @@ $(Split-Registry -Content @"
 ; ---
 
 "@
-Write-Custom "Successfully modified registry settings (AI & Search)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (AI & Search)"
 
 # Registry tweaks (Features)
 Set-Registry -Content @"
@@ -1238,7 +1235,7 @@ $(Split-Registry -Content @"
 "AutoUpdateEnabled"=dword:00000000
 
 "@
-Write-Custom "Successfully modified registry settings (Features)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (Features)"
 
 # Registry tweaks (Gaming)
 Set-Registry -Content @"
@@ -1295,7 +1292,7 @@ $(Split-Registry -Content @"
 ; ---
 
 "@
-Write-Custom "Successfully modified registry settings (Gaming)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (Gaming)"
 
 # Registry tweaks (Input)
 Set-Registry -Content @"
@@ -1464,7 +1461,7 @@ $(Split-Registry -Content @"
 "MouseDataQueueSize"=dword:0000001e
 
 "@
-Write-Custom "Successfully modified registry settings (Input)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (Input)"
 
 # Registry tweaks (Media)
 Set-Registry -Content @"
@@ -1570,7 +1567,7 @@ $(Split-Registry -Content @"
 "Win32PrioritySeparation"=dword:$('{0:x8}' -f $Win32PrioSep)
 
 "@
-Write-Custom "Successfully modified registry settings (Media)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (Media)"
 
 # Registry tweaks (Memory)
 Set-Registry -Content @"
@@ -1613,7 +1610,7 @@ $(Split-Registry -Content @"
 "EnableSuperfetch"=dword:00000000
 
 "@
-Write-Custom "Successfully modified registry settings (Memory)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (Memory)"
 
 # Registry tweaks (Network)
 Set-Registry -Content @"
@@ -1720,7 +1717,7 @@ $(Split-Registry -Content @"
 "UseDelayedAcceptance"=dword:00000000
 
 "@
-Write-Custom "Successfully modified registry settings (Network)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (Network)"
 
 # Registry tweaks (Power)
 Set-Registry -Content @"
@@ -1761,7 +1758,7 @@ $(Split-Registry -Content @"
 "DisableSelectiveSuspend"=dword:00000001
 
 "@
-Write-Custom "Successfully modified registry settings (Power)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (Power)"
 
 # Registry tweaks (Security)
 Set-Registry -Content @"
@@ -1813,7 +1810,7 @@ $(Split-Registry -Content @"
 "VerifiedAndReputablePolicyState"=dword:00000000
 
 "@
-Write-Custom "Successfully modified registry settings (Security)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (Security)"
 
 # Registry tweaks (Telemetry)
 Set-Registry -Content @"
@@ -1972,7 +1969,7 @@ $(Split-Registry -Content @"
 "PublishUserActivities"=dword:00000000
 
 "@
-Write-Custom "Successfully modified registry settings (Telemetry)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (Telemetry)"
 
 # Registry tweaks (VBS)
 Set-Registry -Content @"
@@ -2017,18 +2014,19 @@ Windows Registry Editor Version 5.00
 "SecretsMode"=dword:00000000
 
 "@
-Write-Custom "Successfully modified registry settings (VBS)" -NewLineBefore
+Write-Custom "Successfully modified registry settings (VBS)"
 
 # Network settings task
 New-Task -Name "ZeroLatency (netsh)" -Command $NetshCommands
-Write-Custom "Successfully created a task with netsh commands" -NewLineBefore
+Write-Custom "Successfully created a task with netsh commands"
 
 # Network adapters restart
 Get-NetAdapter -Physical | ForEach-Object { Restart-NetAdapter -Name "$($_.Name)" }
-Write-Custom "Successfully restarted all physical network adapters" -NewLineBefore
+Write-Custom "Successfully restarted all physical network adapters"
 
 # Final message
-Write-Host "`nScript complete! Restart recommended to apply all changes`n`nPress any key to exit..." -ForegroundColor DarkMagenta
+Write-Host "`n`e[1;35mScript complete! Restart recommended to apply all changes`n`nPress any key to exit...`e[0m"
 $Null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
+# End logging
 Stop-Transcript

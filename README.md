@@ -30,7 +30,7 @@ This script makes significant modifications to your Windows system configuration
 
 ### Default
 
-1. Install or update to most recent version of NIC drivers
+1. Install or update to the latest version of NIC drivers
     - [Realtek](https://www.realtek.com/Download/List?cate_id=584) (select NDIS - Not Support Power Saving)
     - [Intel](https://www.intel.com/content/www/us/en/download/15084/intel-ethernet-adapter-complete-driver-pack.html)
 2. Download the [ZeroLatency.ps1](https://raw.githubusercontent.com/ceferrari/ZeroLatency/refs/heads/main/ZeroLatency.ps1) file (Right click > Save link as...)
@@ -39,7 +39,7 @@ This script makes significant modifications to your Windows system configuration
     Unblock-File -Path "C:\Path\To\ZeroLatency.ps1"
     ```
 4. Open the file using a text editor (e.g., Notepad or VSCode)
-5. Go through the steps, change the variables and save the file
+5. Go through each step, change the variables and save the file
 6. Execute the script by double-clicking the file and accepting the UAC prompt
     - You may need to associate `.ps1` files with PowerShell 7 when running it for the first time
     - PowerShell 7 executable is usually located at `C:\Program Files\PowerShell\7\pwsh.exe`
