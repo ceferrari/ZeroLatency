@@ -90,6 +90,7 @@ Sspecialized tool designed to extend the capabilities of your display hardware b
 
 <details>
   <summary>LatencyMon result obtained after three consecutive Arms Race matches in Counter Strike 2.</summary>
+  <img width="1230" height="1025" alt="Result_LatencyMon" src="https://github.com/user-attachments/assets/a15bd957-f3d5-4d02-baf2-805e5001b497" />
 </details>
 
 ## 🤝 Contributing
