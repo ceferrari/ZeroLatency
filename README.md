@@ -93,6 +93,13 @@ Sspecialized tool designed to extend the capabilities of your display hardware b
   <img width="1228" height="1024" alt="Result_LatencyMon" src=".github/images/Result_LatencyMon.png" />
 </details>
 
+### [MouseTester](https://www.overclock.net/threads/mousetester-software-reloaded.1590569)
+
+<details>
+  <summary>MouseTester result obtained with a Razer DeathAdder V2 Pro on wireless mode and 1600dpi.</summary>
+  <img width="1228" height="1024" alt="Result_MouseTester" src=".github/images/Result_MouseTester.png" />
+</details>
+
 ## 🤝 Contributing
 
 Contributions are welcome! 🎉

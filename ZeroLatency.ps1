@@ -106,6 +106,7 @@ $ExcludedProcesses = @(
     # Tools
     "bitsumsessionagent.exe"
     "latmon.exe"
+    "mousetester.exe"
     "msiafterburner.exe"
     "presentmondataprovider.exe"
     "processgovernor.exe"
