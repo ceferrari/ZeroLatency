@@ -56,7 +56,7 @@ This script makes significant modifications to your Windows system configuration
 
 ### Other
 
-- To achieve high ratings on the Bufferbloat test, this script disables TCP Autotuning. This is a strategic choice to prioritize low latency and stable ping times under heavy network load, which is the core metric of the Bufferbloat grade. By limiting the maximum TCP buffer size, we prevent the buildup of excessive queues in your router, eliminating the bloat and the lag it causes, even when your connection is saturated. This latency-focused configuration comes with a potential trade-off: a reduction in maximum raw throughput (speed) on high-bandwidth, high-latency connections. If you find the reduction in raw speed undesirable, or if an A+ rating is not a priority for your use case, we recommend reverting this tweak to restore your connection's full throughput potential, by running the following command in an elevated Terminal (PowerShell or Command Prompt):
+- To achieve high ratings on the Bufferbloat test, this script disables `TCP Autotuning`. This is a strategic choice to prioritize low latency and stable ping times under heavy network load, which is the core metric of the Bufferbloat grade. By limiting the maximum TCP buffer size, we prevent the buildup of excessive queues in your router, eliminating the bloat and the lag it causes, even when your connection is saturated. This latency-focused configuration comes with a potential trade-off: a reduction in maximum raw throughput (speed) on high-bandwidth, high-latency connections. If you find the reduction in raw speed undesirable, or if an A+ rating is not a priority for your use case, we recommend reverting this tweak to restore your connection's full throughput potential, by running the following command in an elevated Terminal (PowerShell or Command Prompt):
   ```powershell
   netsh int tcp set global autotuninglevel=normal
   ```
@@ -110,21 +110,21 @@ Sspecialized tool designed to extend the capabilities of your display hardware b
 ### [Bufferbloat](https://www.waveform.com/tools/bufferbloat)
 
 <details>
-  <summary>Result obtained from a fiber connection in Brazil and without an SQM router.</summary>
+  <summary>Result obtained from a fiber connection in Brazil and without an SQM router</summary>
   <img width="1228" height="1024" alt="Result_Bufferbloat" src=".github/images/Result_Bufferbloat.png" />
 </details>
 
 ### [LatencyMon](https://www.resplendence.com/latencymon)
 
 <details>
-  <summary>Result obtained after three consecutive Arms Race matches in Counter Strike 2.</summary>
+  <summary>Result obtained after three consecutive Arms Race matches in Counter Strike 2</summary>
   <img width="1228" height="1024" alt="Result_LatencyMon" src=".github/images/Result_LatencyMon.png" />
 </details>
 
 ### [MouseTester](https://www.overclock.net/threads/mousetester-software-reloaded.1590569)
 
 <details>
-  <summary>Result obtained with a Razer DeathAdder V2 Pro on wireless mode and 1600dpi.</summary>
+  <summary>Result obtained with a Razer DeathAdder V2 Pro on wireless mode and 1600dpi</summary>
   <img width="1228" height="1024" alt="Result_MouseTester" src=".github/images/Result_MouseTester.png" />
 </details>
 
