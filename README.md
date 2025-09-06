@@ -54,11 +54,15 @@ This script makes significant modifications to your Windows system configuration
     ```
 3. Execute the script by double-clicking the file and accepting the UAC prompt
 
-### Other
+### Fixes
 
-- To achieve high ratings on the Bufferbloat test, this script disables `TCP Autotuning`. This is a strategic choice to prioritize low latency and stable ping times under heavy network load, which is the core metric of the Bufferbloat grade. By limiting the maximum TCP buffer size, we prevent the buildup of excessive queues in your router, eliminating the bloat and the lag it causes, even when your connection is saturated. This latency-focused configuration comes with a potential trade-off: a reduction in maximum raw throughput (speed) on high-bandwidth, high-latency connections. If you find the reduction in raw speed undesirable, or if an A+ rating is not a priority for your use case, we recommend reverting this tweak to restore your connection's full throughput potential, by running the following command in an elevated Terminal (PowerShell or Command Prompt):
+- To achieve high ratings on the Bufferbloat test, this script disables `TCP Autotuning`. This is a strategic choice to prioritize low latency and stable ping times under heavy network load, which is the core metric of the Bufferbloat grade. By limiting the maximum TCP buffer size, we prevent the buildup of excessive queues in your router, eliminating the bloat and the lag it causes, even when your connection is saturated. This latency-focused configuration comes with a potential trade-off: a reduction in maximum raw throughput (speed) on high-bandwidth, high-latency connections. If you find the reduction in raw speed undesirable, or if an A+ rating is not a priority for your use case, we recommend reverting this tweak to restore your connection's full throughput potential, by running the following command in an elevated Terminal (PowerShell or Command Prompt)
   ```powershell
   netsh int tcp set global autotuninglevel=normal
+  ```
+- If you choose not to follow the recommendation of configuring your interrupt affinities using the [Go Interrupt Policy](#go-interrupt-policy) application for whatever reason, even though it is likely the most effective optimization available, you will need to adjust the hidden `Interrupt Steering Mode` setting on the ZeroLatency custom power plan. By default, this setting can be configured to `Lock Interrupt Routing` in order to minimize the overhead of switching cores. However, since you will not be manually distributing interrupts across specific cores in this scenario, it is advisable to change this setting to `Default`, allowing Windows to handle interrupt routing automatically, by running the following command in an elevated Terminal (won't work on Command Prompt, only PowerShell)
+  ```powershell
+  powercfg /setacvalueindex ([regex]::Match((powercfg /list | Select-String "ZeroLatency" | Select -First 1), "[0-9a-fA-F-]{36}").Value) "48672f38-7a9a-4bb2-8bf8-3d85be19de4e" "2bfc24f9-5ea2-4801-8213-3dbae01aa39d" 0
   ```
 
 ## 🧩 Extra
