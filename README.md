@@ -113,7 +113,11 @@ Modern and comprehensive utility, serving as a robust replacement for legacy too
       - `<Core X>`: `<Thread Y>`
   - Glossary
     - `<Priority>`: Set to `High` for latency-sensitive devices (e.g., GPU and NIC), otherwise set to `Normal`
-    - `<Core X>`: Distribute devices across different CPU cores while avoiding Core 0 (heavily utilized by the operating system) and Core 1 (often treated as the primary core by certain games when the first core is skipped via Process Lasso). For example, assign the `GPU` to `Core 2`, the `NIC` to `Core 3`, the `NVMe` to `Core 4`, all `USB Controllers` to `Core 5` and so on
+    - `<Core X>`: Distribute devices across different CPU cores while avoiding Core 0 (heavily utilized by the operating system) and Core 1 (often treated as the primary core by certain games when the first core is skipped via [Process Lasso](#process-lasso)), for example:
+      - Core 2: `GPU`
+      - Core 3: `NIC`
+      - Core 4: `NVMe and SATA Controllers`
+      - Core 5: `USB Controllers`
     - `<Thread Y>`: Select the corresponding thread number (e.g., if you have HT/SMT on, select `both boxes`, otherwise just the `first box`)
 
 </details>
@@ -133,7 +137,7 @@ Specialized tool designed to extend the capabilities of your display hardware by
     - Extension blocks > VTB-EXT > Detailed resolutions > `Delete all`
     - Extension blocks > DisplayID 1.3 > `Delete`
     - Extension blocks > DisplayID 2.0 > `Delete`
-    - Extension blocks > Add... > Type: `DisplayID 2.0` > Add... > Detailed resolutions > Add... > [ Type: `CVT-RB2`, Active: `<Resolution>`, Refresh rate: `<Refresh Rate>` ]
+    - Extension blocks > Add... > Type: `DisplayID 2.0` > Add... > Detailed resolutions > Add... > [ Type: `CVT-RB2`, Active: `<Resolution>`, Refresh rate: `<Refresh Rate>`, OK ]
   - Glossary
     - `<Resolution>`: Replace with your native resolution (e.g., `1920x1080`) and repeat for any custom resolutions you want to add (e.g., `1280x960`)
     - `<Refresh Rate>`: Replace with the maximum refresh rate supported by your monitor (e.g., `144` or `240`)
