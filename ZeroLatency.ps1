@@ -41,10 +41,10 @@ $Win32PrioSep = 36      # Win32PrioritySeparation          X = Decimal value to 
 # STEP 1 - Variables to modify (network basic)
 $NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
 $DNSProvider = 1        # Domain Name System Provider      1 = Cloudflare, 2 = Google
-$RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8, may vary by NIC)
-$TBuffers = 64          # Transmit Buffers                 64 = Min, 4096 = Max (Increments of 8, may vary by NIC)
+$RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8; may vary by NIC)
+$TBuffers = 64          # Transmit Buffers                 64 = Min, 4096 = Max (Increments of 8; may vary by NIC)
 $Offloads = 3           # Checksum Offloads                0 = Off, 1 = Tx only, 2 = Rx only, 3 = Both
-$RSSQueues = 4          # Number of RSS Queues             0 = Off, X = Number of RSS Queues (Available values: 1, 2, 4 - varies by NIC)
+$RSSQueues = 4          # Number of RSS Queues             0 = Off, X = Number of RSS Queues (Available values: 1, 2, 4; may vary by NIC)
 $RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.g., 0, 2, 4, 6... with HT/SMT on; 0, 1, 2, 3... otherwise), -1 = Assign from last core backwards
 
 # STEP 1 - Variables to modify (network advanced)
@@ -621,16 +621,30 @@ $UninstalledPackages | Where-Object { $_ } | ForEach-Object {
     Invoke-Custom "Get-AppxPackage -AllUsers | Where-Object { `$_.Name -like '*$_*' } | ForEach-Object { Remove-AppxPackage -AllUsers -Package `$_.PackageFullName }"
 }
 
-# System settings (Timers, Data Execution Prevention, Pagefile, PowerShell)
+# WinGet and PowerShell
+@(
+    "winget upgrade --all --accept-package-agreements --accept-source-agreements"
+    "setx POWERSHELL_TELEMETRY_OPTOUT 1"
+) | ForEach-Object {
+    Invoke-Custom $_
+}
+
+# Timers and Data Execution Prevention
 @(
     "bcdedit /set useplatformclock no"
     "bcdedit /set useplatformtick no"
     "bcdedit /set disabledynamictick yes"
     "bcdedit /set ``{current``} nx OptIn"
+    "Get-PnpDevice -FriendlyName 'High Precision Event Timer' | Disable-PnpDevice -Confirm:`$False"
+    "Get-PnpDevice -FriendlyName 'Remote Desktop Device Redirector Bus' | Disable-PnpDevice -Confirm:`$False"
+) | ForEach-Object {
+    Invoke-Custom $_
+}
+
+# Pagefile
+@(
     "Set-CimInstance -CimInstance (Get-CimInstance -ClassName Win32_ComputerSystem) -Arguments @{ AutomaticManagedPagefile = `$False }"
     "Set-CimInstance -CimInstance (Get-CimInstance -ClassName Win32_PageFileSetting) -Arguments @{ InitialSize=$($Pagefile); MaximumSize=$($Pagefile) }"
-    "winget upgrade --all --accept-package-agreements --accept-source-agreements"
-    "setx POWERSHELL_TELEMETRY_OPTOUT 1"
 ) | ForEach-Object {
     Invoke-Custom $_
 }

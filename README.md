@@ -80,19 +80,20 @@ Aadvanced software for Windows that optimizes system responsiveness and stabilit
   <summary>Expand to check the recommended configuration</summary>
 
   - Settings
-    - Main > [ (✓) ProBalance Enabled, ( ) SmartTrim Enabled, ( ) IdleSaver Enabled ]
-    - Options > Power > Start Process Lasso with Power Profile > ZeroLatency
-    - Options > General > Refresh Interval (GUI) > 5 seconds
-    - Options > General > Refresh Interval (Governor) > 5 seconds
-    - Options > CPU > Efficiency Modes... > [ Process match: *, Efficiency mode: Off, Add Rule ]
-    - Options > CPU > Dynamic Thread Priority Boosts... > [ Process match: *, Dynamic thread priority boosts: Off, Add Rule ]
-    - Options > CPU > CPU Affinities... > [ Process match: audiodg.exe, CPU affinity: \<Select A\>, Add Rule ]
-    - Options > CPU > CPU Affinities... > [ Process match: dwm.exe, CPU affinity: \<Select A\>, Add Rule ]
-    - Options > CPU > CPU Affinities... > [ Process match: \<Your Process\>, CPU affinity: \<Select B\>, Add Rule ]
+    - Main > [ (`✓`) ProBalance Enabled, (` `) SmartTrim Enabled, (` `) IdleSaver Enabled ]
+    - Options > Power > Start Process Lasso with Power Profile > `ZeroLatency`
+    - Options > General > Refresh Interval (GUI) > `5 seconds`
+    - Options > General > Refresh Interval (Governor) > `5 seconds`
+    - Options > CPU > Efficiency Modes... > [ Process match: `*`, Efficiency mode: `Off`, Add Rule ]
+    - Options > CPU > Dynamic Thread Priority Boosts... > [ Process match: `*`, Dynamic thread p. b.: `Off`, Add Rule ]
+    - Options > CPU > CPU Priorities... > [ Process match: `audiodg.exe`, Priority class: `Above normal`, Add Rule ]
+    - Options > CPU > CPU Priorities... > [ Process match: `<Process>`, Priority class: `Above normal`, Add Rule ]
+    - Options > CPU > CPU Affinities... > [ Process match: `audiodg.exe`, CPU affinity: `<Select A>`, Add Rule ]
+    - Options > CPU > CPU Affinities... > [ Process match: `<Process>`, CPU affinity: `<Select B>`, Add Rule ]
   - Glossary
-    - \<Select A\>: Select the first physical core (e.g., if you have HT/SMT on, select 0 and 1, otherwise just 0)
-    - \<Select B\>: Select all remaining cores (e.g., if you have HT/SMT on and 6 cores, select 2 through 11)
-    - \<Your Process\>: Replace with the name of the process you want to exclude from first core (e.g., your game executable)
+    - `<Process>`: Replace with the name of the process you want to optimize (e.g., your game executable)
+    - `<Select A>`: Select the first physical core (e.g., if you have HT/SMT on, select `0` and `1`, otherwise just `0`)
+    - `<Select B>`: Select all remaining cores (e.g., if you have HT/SMT on and 6 cores, select `2` through `11`)
 
 </details>
 
