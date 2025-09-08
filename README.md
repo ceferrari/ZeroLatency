@@ -85,7 +85,7 @@ Aadvanced software for Windows that optimizes system responsiveness and stabilit
     - Options > General > Refresh Interval (GUI) > `5 seconds`
     - Options > General > Refresh Interval (Governor) > `5 seconds`
     - Options > CPU > Efficiency Modes... > [ Process match: `*`, Efficiency mode: `Off`, Add Rule ]
-    - Options > CPU > Dynamic Thread Priority Boosts... > [ Process match: `*`, Dynamic thread p. b.: `Off`, Add Rule ]
+    - Options > CPU > Dynamic Thread P. Boosts... > [ Process match: `*`, Dynamic thread p. boosts: `Off`, Add Rule ]
     - Options > CPU > CPU Priorities... > [ Process match: `audiodg.exe`, Priority class: `Above normal`, Add Rule ]
     - Options > CPU > CPU Priorities... > [ Process match: `<Process>`, Priority class: `Above normal`, Add Rule ]
     - Options > CPU > CPU Affinities... > [ Process match: `audiodg.exe`, CPU affinity: `<Select A>`, Add Rule ]
@@ -107,10 +107,24 @@ Modern and comprehensive utility, serving as a robust replacement for legacy too
 
 ### [Custom Resolution Utility](https://www.monitortests.com/forum/Thread-Custom-Resolution-Utility-CRU)
 
-Sspecialized tool designed to extend the capabilities of your display hardware by allowing users to create custom resolutions, refresh rates, and timing parameters. It provides precise control over monitor settings beyond standard driver options, enabling optimized visual performance and compatibility with non-standard displays or configurations.
+Specialized tool designed to extend the capabilities of your display hardware by allowing users to create custom resolutions, refresh rates, and timing parameters. It provides precise control over monitor settings beyond standard driver options, enabling optimized visual performance and compatibility with non-standard displays or configurations.
 
 <details>
-  <summary>(WIP) Expand to check the recommended configuration</summary>
+  <summary>Expand to check the recommended configuration</summary>
+
+  - Settings
+    - Estabilished resolutions > `None`
+    - Detailed resolutions > `Delete all`
+    - Standard resolutions > `Delete all`
+    - Extension blocks > CTA-861 > Detailed resolutions > `Delete all`
+    - Extension blocks > VTB-EXT > Detailed resolutions > `Delete all`
+    - Extension blocks > DisplayID 1.3 > `Delete`
+    - Extension blocks > DisplayID 2.0 > `Delete`
+    - Extension blocks > Add... > Type: `DisplayID 2.0` > Add... > Detailed resolutions > Add... > [ Type: `CVT-RB2`, Active: `<Resolution>`, Refresh rate: `<Refresh Rate>` ]
+  - Glossary
+    - `<Resolution>`: Replace with your native resolution (e.g., `1920x1080`) and repeat for any custom resolutions you want to add (e.g., `1280x960`)
+    - `<Refresh Rate>`: Replace with the maximum refresh rate supported by your monitor (e.g., `144` or `240`)
+
 </details>
 
 ## 📈 Results
