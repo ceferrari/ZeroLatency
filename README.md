@@ -116,8 +116,8 @@ Modern and comprehensive utility, serving as a robust replacement for legacy too
     - `<Core X>`: Distribute devices across different CPU cores while avoiding Core 0 (heavily utilized by the operating system) and Core 1 (often treated as the primary core by certain games when the first core is skipped via [Process Lasso](#process-lasso)), for example:
       - Core 2: `GPU`
       - Core 3: `NIC`
-      - Core 4: `NVMe and SATA Controllers`
-      - Core 5: `USB Controllers`
+      - Core 4: `USB Controllers`
+      - Core 5: `NVMe and SATA Controllers`
     - `<Thread Y>`: Select the corresponding thread number (e.g., if you have HT/SMT on, select `both boxes`, otherwise just the `first box`)
 
 </details>

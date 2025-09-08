@@ -692,6 +692,10 @@ $AdapterProperties = @(
 
 # Network settings reset
 @(
+    "netsh int ip set dynamicport tcp start=49152 num=16384"
+    "netsh int ip set dynamicport udp start=49152 num=16384"
+    "netsh int tcp set supplemental template=none"
+    "netsh int teredo set state default"
     "netsh int ip reset"
     "netsh int ipv4 reset"
     "netsh int ipv6 reset"
