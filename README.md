@@ -85,7 +85,7 @@ Aadvanced software for Windows that optimizes system responsiveness and stabilit
     - Options > General > Refresh Interval (GUI) > `5 seconds`
     - Options > General > Refresh Interval (Governor) > `5 seconds`
     - Options > CPU > Efficiency Modes... > [ Process match: `*`, Efficiency mode: `Off`, Add Rule ]
-    - Options > CPU > Dynamic Thread P. Boosts... > [ Process match: `*`, Dynamic thread p. boosts: `Off`, Add Rule ]
+    - Options > CPU > Dynamic Thread Priority Boosts... > [ Process match: `*`, Dynamic thread priority boosts: `Off`, Add Rule ]
     - Options > CPU > CPU Priorities... > [ Process match: `audiodg.exe`, Priority class: `Above normal`, Add Rule ]
     - Options > CPU > CPU Priorities... > [ Process match: `<Process>`, Priority class: `Above normal`, Add Rule ]
     - Options > CPU > CPU Affinities... > [ Process match: `audiodg.exe`, CPU affinity: `<Select A>`, Add Rule ]
@@ -102,7 +102,20 @@ Aadvanced software for Windows that optimizes system responsiveness and stabilit
 Modern and comprehensive utility, serving as a robust replacement for legacy tools such as [Interrupt Affinity Tool](https://www.techpowerup.com/download/microsoft-interrupt-affinity-tool) and [MSI Tool](https://forums.guru3d.com/threads/windows-line-based-vs-message-signaled-based-interrupts-msi-tool.378044), providing a unified solution for optimizing device interrupts on Windows. Its primary function is to manage Message Signaled Interrupts (MSI), a more efficient, lower-latency alternative to traditional line-based interrupts, by allowing users to control interrupt priorities and assign specific CPU cores affinities for handling device interrupts.
 
 <details>
-  <summary>(WIP) Expand to check the recommended configuration</summary>
+  <summary>Expand to check the recommended configuration</summary>
+
+  - Settings
+    - Sort by `Interrupt Type` column to identify devices using `MSI`
+    - For each device using `MSI`, double-click it and select:
+      - MSI Mode: (`✓`)
+      - Device Priority: `<Priority>`
+      - Device Policy: `IrqPolicySpecifiedProcessors`
+      - `<Core X>`: `<Thread Y>`
+  - Glossary
+    - `<Priority>`: Set to `High` for latency-sensitive devices (e.g., GPU and NIC), otherwise set to `Normal`
+    - `<Core X>`: Distribute devices across different CPU cores while avoiding Core 0 (heavily utilized by the operating system) and Core 1 (often treated as the primary core by certain games when the first core is skipped via Process Lasso). For example, assign the `GPU` to `Core 2`, the `NIC` to `Core 3`, the `NVMe` to `Core 4`, all `USB Controllers` to `Core 5` and so on
+    - `<Thread Y>`: Select the corresponding thread number (e.g., if you have HT/SMT on, select `both boxes`, otherwise just the `first box`)
+
 </details>
 
 ### [Custom Resolution Utility](https://www.monitortests.com/forum/Thread-Custom-Resolution-Utility-CRU)
