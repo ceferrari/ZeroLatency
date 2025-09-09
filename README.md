@@ -9,7 +9,7 @@
 
 In addition to the provided information, the script is not intended for every user or scenario. It is specifically designed for Windows 11 and has not been tested on any other versions. The network optimizations assume a stable, high-quality link, such as fiber, and may not be as effective on unstable or low-quality connections. Users who require high throughput for tasks like simultaneous streaming while gaming may need to tweak the script to suit their specific needs. The script also does not focus on security hardening; for that purpose, users should look into specialized tools like the [Harden Windows Security](https://github.com/HotCakeX/Harden-Windows-Security). Furthermore, while the script will undoubtedly improve gaming performance, its primary goal is to achieve minimum latency, not to maximize raw FPS.
 
-## ⚠️ Disclaimer
+## ☢️ Disclaimer
 
 This script makes significant modifications to your Windows system configuration. Use it at your own risk. We are not responsible for any instability, data loss, security vulnerabilities, hardware damage, or any other issues that may result from using this script. It is highly recommended to create a system restore point before proceeding.
 
@@ -45,7 +45,7 @@ This script makes significant modifications to your Windows system configuration
     - PowerShell 7 executable is usually located at `C:\Program Files\PowerShell\7\pwsh.exe`
 7. Check the [Extra](#-extra) section for further optimizations (optional but highly recommended)
 
-### (WIP) Reset
+### Reset (WIP - Will not undo the Registry settings yet)
 
 1. Download the [ZeroLatencyReset.ps1](https://raw.githubusercontent.com/ceferrari/ZeroLatency/refs/heads/main/ZeroLatencyReset.ps1) file (Right click > Save link as...)
 2. Run the following command to unblock the script (won't work on Command Prompt, only PowerShell)

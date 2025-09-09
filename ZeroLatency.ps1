@@ -1819,8 +1819,8 @@ $(Split-Registry -Content @"
 
 ; Limit Windows Defender CPU Usage
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\Scan]
-"AvgCPULoadFactor"=dword:00000014
-"ScanAvgCPULoadFactor"=dword:00000014
+"AvgCPULoadFactor"=dword:00000019
+"ScanAvgCPULoadFactor"=dword:00000019
 
 ; Disable App & browser control > Smart App Control
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CI\Policy]
