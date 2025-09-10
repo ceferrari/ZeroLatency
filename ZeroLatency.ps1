@@ -523,12 +523,14 @@ $SagerunProfile = 5555
 Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches" | ForEach-Object {
     Set-ItemProperty -Path $_.PsPath -Name "StateFlags$SagerunProfile" -Type "DWord" -Value 2 -Force
 }
-@("defrag", "dism", "cleanmgr") | ForEach-Object {
-    Get-Process "$_" -ErrorAction SilentlyContinue | Stop-Process -Force
+@{
+    "defrag" = "/AllVolumes /Optimize /Retrim /PrintProgress /Verbose"
+    "dism" = "/Online /Cleanup-Image /StartComponentCleanup /ResetBase"
+    "cleanmgr" = "/sagerun:$SagerunProfile"
+}.GetEnumerator() | ForEach-Object {
+    Get-Process $_.Key -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Process -FilePath ($_.Key + ".exe") -ArgumentList $_.Value
 }
-Start-Process -FilePath "defrag.exe" -ArgumentList "/AllVolumes /Optimize /Retrim /PrintProgress /Verbose"
-Start-Process -FilePath "dism.exe" -ArgumentList "/Online /Cleanup-Image /StartComponentCleanup /ResetBase"
-Start-Process -FilePath "cleanmgr.exe" -ArgumentList "/sagerun:$SagerunProfile"
 
 # Temporary files
 $TemporaryFiles + (
