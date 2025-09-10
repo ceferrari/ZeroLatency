@@ -57,7 +57,7 @@ $ROOLimit = 10          # Reassembly Out of Order Limit    X = How many out-of-o
 
 #########################################################
 # STEP 2 - Add or remove paths of temporary files to be cleaned
-$TemporaryFiles = @(
+$TemporaryPaths = @(
     "$env:LocalAppData\Temp"
     "$env:ProgramData\Microsoft\Windows\DeliveryOptimization\Cache"
     "$env:ProgramData\Microsoft\Windows\WSUS\UpdateServicesPackages"
@@ -532,8 +532,8 @@ Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCa
     Start-Process -FilePath ($_.Key + ".exe") -ArgumentList $_.Value
 }
 
-# Temporary files
-$TemporaryFiles + (
+# Temporary paths
+$TemporaryPaths + (
     Get-ChildItem -Path "$env:UserProfile\AppData\Local\Packages" -Directory | Where-Object { $_.Name -like "Microsoft.Windows.ContentDeliveryManager_*" } | ForEach-Object { Join-Path $_.FullName "LocalState\Assets" }
 ) | ForEach-Object {
     if (Test-Path $_) { Remove-Item -Path "$_\*" -Recurse -Force -ErrorAction SilentlyContinue }
