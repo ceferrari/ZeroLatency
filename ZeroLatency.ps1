@@ -1,6 +1,6 @@
 # Request administrative privileges
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Start-Process pwsh -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    Start-Process -FilePath "pwsh.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     exit
 }
 
@@ -141,7 +141,6 @@ $DisabledServices = @(
     "bthserv"                                           # Bluetooth Support Service
     "CertPropSvc"                                       # Certificate Propagation
     "dcsvc"                                             # Declared Configuration(DC) service
-    "defragsvc"                                         # Optimize drives
     "DeviceAssociationService"                          # Device Association Service
     "diagsvc"                                           # Diagnostic Execution Service
     "DiagTrack"                                         # Connected User Experiences and Telemetry
@@ -518,6 +517,18 @@ function Get-RSSCommand {
     }
     return "Set-NetAdapterRss -Profile 'ClosestStatic' -NumberOfReceiveQueues $([Math]::Max(1, $RSSQueues)) -BaseProcessorNumber $([Math]::Min($Base, $Limit)) -MaxProcessorNumber $([Math]::Min($Max, $Limit)) -Enabled `$$($RSSQueues -gt 0)"
 }
+
+# Disk Cleanup and Optimization
+$SagerunProfile = 5555
+Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches" | ForEach-Object {
+    Set-ItemProperty -Path $_.PsPath -Name "StateFlags$SagerunProfile" -Type "DWord" -Value 2 -Force
+}
+@("defrag", "dism", "cleanmgr") | ForEach-Object {
+    Get-Process "$_" -ErrorAction SilentlyContinue | Stop-Process -Force
+}
+Start-Process -FilePath "defrag.exe" -ArgumentList "/AllVolumes /Optimize /Retrim /PrintProgress /Verbose"
+Start-Process -FilePath "dism.exe" -ArgumentList "/Online /Cleanup-Image /StartComponentCleanup /ResetBase"
+Start-Process -FilePath "cleanmgr.exe" -ArgumentList "/sagerun:$SagerunProfile"
 
 # Temporary files
 $TemporaryFiles + (
