@@ -1529,6 +1529,7 @@ Windows Registry Editor Version 5.00
 ; Tune Multimedia for Best Performance and Responsiveness
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile]
 "AlwaysOn"=dword:00000001
+"LazyModeTimeout"=dword:00000000
 "NetworkThrottlingIndex"=dword:ffffffff
 "NoLazyMode"=dword:00000001
 "SystemResponsiveness"=dword:00000000
@@ -1588,9 +1589,10 @@ $(Split-Registry -Content @"
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\WMDRM]
 "DisableOnline"=dword:00000001
 
-; Toggle Hardware-Accelerated GPU Scheduling
+; Toggle Hardware-Accelerated GPU Scheduling and Increase Timeout Detection and Recovery
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers]
 "HwSchMode"=dword:$('{0:x8}' -f ($HAGS + 1))
+"TdrDelay"=dword:0000000a
 
 ; Disable Interrupt Steering
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PnP\Pci]
