@@ -56,29 +56,7 @@ $ROOLimit = 10          # Reassembly Out of Order Limit    X = How many out-of-o
 #########################################################
 
 #########################################################
-# STEP 2 - Add or remove paths of temporary files to be cleaned
-$TemporaryPaths = @(
-    "$env:LocalAppData\Temp"
-    "$env:ProgramData\Microsoft\Windows\DeliveryOptimization\Cache"
-    "$env:ProgramData\Microsoft\Windows\WSUS\UpdateServicesPackages"
-    "$env:SystemRoot\Logs"
-    "$env:SystemRoot\Minidump"
-    "$env:SystemRoot\Prefetch"
-    "$env:SystemRoot\SoftwareDistribution\Download"
-    "$env:SystemRoot\Temp"
-    "$env:UserProfile\AppData\Local\CrashDumps"
-    "$env:UserProfile\AppData\Local\Microsoft\Windows\Explorer"
-    "$env:UserProfile\AppData\Local\Microsoft\Windows\History"
-    "$env:UserProfile\AppData\Local\Microsoft\Windows\INetCache"
-    "$env:UserProfile\AppData\Local\Microsoft\Windows\INetCookies"
-    "$env:UserProfile\AppData\Local\Packages\Microsoft.Windows.Caches"
-    "$env:UserProfile\AppData\Local\Temp"
-    "$env:UserProfile\AppData\LocalLow\Temp"
-)
-#########################################################
-
-#########################################################
-# STEP 3 - Add or remove folders to be excluded from Windows Defender Scan
+# STEP 2 - Add or remove folders to be excluded from Windows Defender Scan
 $ExcludedFolders = @(
     "C:\Games"
     "C:\ProgramData"
@@ -89,7 +67,7 @@ $ExcludedFolders = @(
 #########################################################
 
 #########################################################
-# STEP 4 - Add or remove processes to be excluded from Windows Defender Scan and Control Flow Guard
+# STEP 3 - Add or remove processes to be excluded from Windows Defender Scan and Exploit Protection
 $ExcludedProcesses = @(
     # System
     "audiodg.exe"
@@ -128,7 +106,7 @@ $ExcludedProcesses = @(
 #########################################################
 
 #########################################################
-# STEP 5 - Add or remove Windows services to disable (if you prefer to set them to manual, rename the variable to $ManualServices)
+# STEP 4 - Add or remove services to be disabled
 $DisabledServices = @(
     "ADPSvc"                                            # ADPSvc
     "ALG"                                               # Application Layer Gateway Service
@@ -257,7 +235,7 @@ $DisabledServices = @(
 #########################################################
 
 #########################################################
-# STEP 6 - Add or remove Windows apps and packages to be uninstalled (ref: https://github.com/Raphire/Win11Debloat/blob/master/Appslist.txt)
+# STEP 5 - Add or remove packages and apps to be uninstalled (ref: https://github.com/Raphire/Win11Debloat/blob/master/Appslist.txt)
 $UninstalledPackages = @(
     "Clipchamp.Clipchamp"                               # Video editor from Microsoft
     "Microsoft.3DBuilder"                               # Basic 3D modeling software
@@ -372,6 +350,61 @@ $UninstalledPackages = @(
 #########################################################
 # END - Stop modifying
 #########################################################
+
+# Exploit Protections to be disabled
+$ExploitProtections = @(
+    "AllowStoreSignedBinaries"
+    "AllowThreadsToOptOut"
+    "AuditChildProcess"
+    "AuditDynamicCode"
+    "AuditEnableExportAddressFilter"
+    "AuditEnableExportAddressFilterPlus"
+    "AuditEnableImportAddressFilter"
+    "AuditEnableRopCallerCheck"
+    "AuditEnableRopSimExec"
+    "AuditEnableRopStackPivot"
+    "AuditFont"
+    "AuditLowLabelImageLoads"
+    "AuditMicrosoftSigned"
+    "AuditPreferSystem32"
+    "AuditRemoteImageLoads"
+    "AuditSEHOP"
+    "AuditStoreSigned"
+    "AuditSystemCall"
+    "AuditUserShadowStack"
+    "BlockDynamicCode"
+    "BlockLowLabelImageLoads"
+    "BlockRemoteImageLoads"
+    "BottomUp"
+    "CFG"
+    "DEP"
+    "DisableExtensionPoints"
+    "DisableFsctlSystemCalls"
+    "DisableNonSystemFonts"
+    "DisableWin32kSystemCalls"
+    "DisallowChildProcessCreation"
+    "EmulateAtlThunks"
+    "EnableExportAddressFilter"
+    "EnableExportAddressFilterPlus"
+    "EnableImportAddressFilter"
+    "EnableRopCallerCheck"
+    "EnableRopSimExec"
+    "EnableRopStackPivot"
+    "EnforceModuleDependencySigning"
+    "ForceRelocateImages"
+    "HighEntropy"
+    "MicrosoftSignedOnly"
+    "PreferSystem32"
+    "RequireInfo"
+    "SEHOP"
+    "SEHOPTelemetry"
+    "StrictCFG"
+    "StrictHandle"
+    "SuppressExports"
+    "TerminateOnError"
+    "UserShadowStack"
+    "UserShadowStackStrictMode"
+)
 
 # Number of *physical* cores of the CPU (e.g., 6 for a 6C/12T model)
 $NumCores = (Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum
@@ -497,14 +530,6 @@ function Set-Registry {
     Remove-Item "$TempFile" -Force
 }
 
-function Set-ControlFlowGuard {
-    param ([string]$Content)
-    $TempFile = [System.IO.Path]::GetTempFileName() + ".xml"
-    $Content | Out-File "$TempFile" -Encoding UTF8
-    Set-ProcessMitigation -PolicyFilePath "$TempFile"
-    Remove-Item "$TempFile" -Force
-}
-
 function Get-RSSCommand {
     param([int]$RSSQueues, [int]$RSSCore, [int]$NumCores)
     $Limit = $NumCores * 2 - 2
@@ -532,8 +557,25 @@ Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCa
     Start-Process -FilePath ($_.Key + ".exe") -ArgumentList $_.Value
 }
 
-# Temporary paths
-$TemporaryPaths + (
+# Temporary files
+@(
+    "$env:LocalAppData\Temp"
+    "$env:ProgramData\Microsoft\Windows\DeliveryOptimization\Cache"
+    "$env:ProgramData\Microsoft\Windows\WSUS\UpdateServicesPackages"
+    "$env:SystemRoot\Logs"
+    "$env:SystemRoot\Minidump"
+    "$env:SystemRoot\Prefetch"
+    "$env:SystemRoot\SoftwareDistribution\Download"
+    "$env:SystemRoot\Temp"
+    "$env:UserProfile\AppData\Local\CrashDumps"
+    "$env:UserProfile\AppData\Local\Microsoft\Windows\Explorer"
+    "$env:UserProfile\AppData\Local\Microsoft\Windows\History"
+    "$env:UserProfile\AppData\Local\Microsoft\Windows\INetCache"
+    "$env:UserProfile\AppData\Local\Microsoft\Windows\INetCookies"
+    "$env:UserProfile\AppData\Local\Packages\Microsoft.Windows.Caches"
+    "$env:UserProfile\AppData\Local\Temp"
+    "$env:UserProfile\AppData\LocalLow\Temp"
+) + (
     Get-ChildItem -Path "$env:UserProfile\AppData\Local\Packages" -Directory | Where-Object { $_.Name -like "Microsoft.Windows.ContentDeliveryManager_*" } | ForEach-Object { Join-Path $_.FullName "LocalState\Assets" }
 ) | ForEach-Object {
     if (Test-Path $_) { Remove-Item -Path "$_\*" -Recurse -Force -ErrorAction SilentlyContinue }
@@ -558,64 +600,32 @@ Write-Custom "Successfully cleared temporary files"
 if (Test-Path "HKCU:\Software\Valve\Steam") { Remove-Item "$((Get-ItemProperty -Path 'HKCU:\Software\Valve\Steam').SteamPath)\steamapps\shadercache" -Recurse -Force -ErrorAction SilentlyContinue }
 Write-Custom "Successfully cleared DirectX shader cache"
 
-# Control Flow Guard rules
-$CFGRules = ""
-$CFGRule = @"
-    <DEP Enable="false" EmulateAtlThunks="false" />
-    <ASLR ForceRelocateImages="false" RequireInfo="false" BottomUp="false" HighEntropy="false" />
-    <StrictHandle Enable="false" />
-    <SystemCalls DisableWin32kSystemCalls="false" />
-    <ExtensionPoints DisableExtensionPoints="false" />
-    <DynamicCode BlockDynamicCode="false" AllowThreadsToOptOut="false" />
-    <ControlFlowGuard Enable="false" SuppressExports="false" StrictControlFlowGuard="false" />
-    <SignedBinaries MicrosoftSignedOnly="false" AllowStoreSignedBinaries="false" EnforceModuleDependencySigning="false" />
-    <Fonts DisableNonSystemFonts="false" AuditOnly="false" />
-    <ImageLoad BlockRemoteImageLoads="false" BlockLowLabelImageLoads="false" />
-    <Payload EnableExportAddressFilter="false" EnableImportAddressFilter="false" EnableRopStackPivot="false" EnableRopCallerCheck="false" EnableRopSimExec="false" />
-    <SEHOP Enable="false" TelemetryOnly="false" />
-    <Heap TerminateOnError="false" />
-    <ChildProcess DisallowChildProcessCreation="false" />
-    <UserShadowStack UserShadowStack="false" UserShadowStackStrictMode="false" />
-"@
-
 # Windows Defender settings
-@(
-    Set-MpPreference -PerformanceModeStatus Enabled             # Virus & threat protection > Virus & threat protection settings > Dev Drive protection
-    Set-MpPreference -MAPSReporting Disabled                    # Virus & threat protection > Virus & threat protection settings > Cloud-delivered protection
-    Set-MpPreference -SubmitSamplesConsent NeverSend            # Virus & threat protection > Virus & threat protection settings > Automatic sample submission
-    Set-MpPreference -EnableControlledFolderAccess Disabled     # Virus & threat protection > Ransomware protection > Controlled folder access
-    # > Registry (Security)                                     # App & browser control > Smart App Control
-    # > Registry (Security)                                     # App & browser control > Reputation-based protection > Check apps and files
-    # > Registry (Security)                                     # App & browser control > Reputation-based protection > SmartScreen for Microsoft Edge
-    # TODO: Find the correspondent registry                     # App & browser control > Reputation-based protection > Phishing protection
-    Set-MpPreference -PUAProtection Disabled                    # App & browser control > Reputation-based protection > Potentially unwanted app blocking
-    # > Registry (Security)                                     # App & browser control > Reputation-based protection > SmartScreen for Microsoft Store Apps
-) | ForEach-Object {
-    & $_
+@{
+    "PerformanceModeStatus" = "Disabled"            # Virus & threat protection > Virus & threat protection settings > Dev Drive protection
+    "MAPSReporting" = "Disabled"                    # Virus & threat protection > Virus & threat protection settings > Cloud-delivered protection
+    "SubmitSamplesConsent" = "NeverSend"            # Virus & threat protection > Virus & threat protection settings > Automatic sample submission
+    "EnableControlledFolderAccess" = "Disabled"     # Virus & threat protection > Ransomware protection > Controlled folder access
+    # > Registry (Security)                         # App & browser control > Smart App Control
+    # > Registry (Security)                         # App & browser control > Reputation-based protection > Check apps and files
+    # > Registry (Security)                         # App & browser control > Reputation-based protection > SmartScreen for Microsoft Edge
+    # TODO: Find the correspondent setting          # App & browser control > Reputation-based protection > Phishing protection
+    "PUAProtection" = "Disabled"                    # App & browser control > Reputation-based protection > Potentially unwanted app blocking
+    # > Registry (Security)                         # App & browser control > Reputation-based protection > SmartScreen for Microsoft Store Apps
+}.GetEnumerator() | ForEach-Object {
+    Invoke-Custom "Set-MpPreference -$($_.Key) $($_.Value)"
 }
-Write-Custom "Successfully disabled less critical Windows Defender settings"
 
 # Windows Defender Scan folders to exclude
 $ExcludedFolders | Where-Object { $_ } | ForEach-Object {
-    Add-MpPreference -ExclusionPath $_
+    Invoke-Custom "Add-MpPreference -ExclusionPath $_"
 }
-Write-Custom "Successfully added to exclude Windows Defender folders"
 
-# Windows Defender Scan and Control Flow Guard processes to exclude
+# Windows Defender Scan and Exploit Protection processes to exclude
 $ExcludedProcesses | Where-Object { $_ } | ForEach-Object {
-    Add-MpPreference -ExclusionProcess $_
-    $CFGRules += "  <AppConfig Executable=`"$_`">`n$($CFGRule.TrimEnd())`n  </AppConfig>`n"
+    Invoke-Custom "Add-MpPreference -ExclusionProcess $_"
+    Invoke-Custom "Set-ProcessMitigation -Name $_ -Disable $($ExploitProtections -join ",")"
 }
-Write-Custom "Successfully added to exclude Windows Defender processes"
-
-# Control Flow Guard settings
-Set-ControlFlowGuard -Content @"
-<?xml version="1.0" encoding="UTF-8"?>
-<MitigationPolicy>
-$CFGRules
-</MitigationPolicy>
-"@
-Write-Custom "Successfully added to exclude Control Flow Guard processes"
 
 # Services to stop and disable
 $DisabledServices | Where-Object { $_ } | ForEach-Object {
@@ -623,12 +633,7 @@ $DisabledServices | Where-Object { $_ } | ForEach-Object {
     Invoke-Custom "Set-Service $_ -StartupType Disabled"
 }
 
-# Services to set to manual
-$ManualServices | Where-Object { $_ } | ForEach-Object {
-    Invoke-Custom "Set-Service $_ -StartupType Manual"
-}
-
-# Apps and packages to uninstall
+# Packages and apps to uninstall
 $UninstalledPackages | Where-Object { $_ } | ForEach-Object {
     Invoke-Custom "Get-AppxProvisionedPackage -Online | Where-Object { `$_.DisplayName -like '*$_*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName `$_.PackageName }"
     Invoke-Custom "Get-AppxPackage -AllUsers | Where-Object { `$_.Name -like '*$_*' } | ForEach-Object { Remove-AppxPackage -AllUsers -Package `$_.PackageFullName }"
@@ -671,7 +676,7 @@ $UninstalledPackages | Where-Object { $_ } | ForEach-Object {
     "Disable-MMAgent -PageCombining"
     "Set-MMAgent -MaxOperationAPIFiles 1"
 ) | ForEach-Object {
-    Invoke-Custom ($_ -match "^Disable-MMAgent" ? "$_ -ErrorAction SilentlyContinue" : $_)
+    Invoke-Custom ($_ -match "^able-MMAgent" ? "$_ -ErrorAction SilentlyContinue" : $_)
 }
 
 # Global network settings

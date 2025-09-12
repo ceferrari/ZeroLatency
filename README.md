@@ -1,4 +1,4 @@
-# ZeroLatency
+# ZeroLatency ⚡️
 
 [![Windows Compatibility: 11](https://img.shields.io/badge/Windows-11-blue.svg)](https://www.microsoft.com/en-us/software-download/windows11)
 [![PowerShell Compatibility: 7](https://img.shields.io/badge/PowerShell-7-blue.svg)](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows)

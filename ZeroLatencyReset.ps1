@@ -1,6 +1,6 @@
 # Request administrative privileges
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Start-Process pwsh -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    Start-Process -FilePath "pwsh.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     exit
 }
 
@@ -11,185 +11,20 @@ Start-Transcript -Path (Join-Path -Path $PSScriptRoot -ChildPath "ZeroLatencyRes
 # BEGIN - Start modifying
 #########################################################
 
-#########################################################
-# STEP 1 - Add or remove folders to be excluded from Windows Defender Scan
+# Add folders to not be excluded from Windows Defender Scan
 $ExcludedFolders = @(
-    "C:\Games"
-    "C:\ProgramData"
-    "$env:UserProfile\AppData"
-    "$env:SystemRoot\System32\config\systemprofile\AppData"
-    "$env:SystemRoot\Temp"
+    # Copy and paste from your ZeroLatency.ps1
 )
-#########################################################
 
-#########################################################
-# STEP 2 - Add or remove processes to be excluded from Windows Defender Scan and Control Flow Guard
+# Add processes to not be excluded from Windows Defender Scan and Exploit Protection
 $ExcludedProcesses = @(
-    # System
-    "audiodg.exe"
-    "csrss.exe"
-    "ctfmon.exe"
-    "dwm.exe"
-    "lsass.exe"
-    "smss.exe"
-    # Drivers
-    "nvcontainer.exe"
-    "nvdisplay.container.exe"
-    "razerappengine.exe"
-    "rzenginemon.exe"
-    # Tools
-    "bitsumsessionagent.exe"
-    "latmon.exe"
-    "mousetester.exe"
-    "msiafterburner.exe"
-    "presentmondataprovider.exe"
-    "processgovernor.exe"
-    "processlasso.exe"
-    "rtss.exe"
-    "rtsshooksloader64.exe"
-    # Steam
-    "cs2.exe"
-    "pathofexile_x64steam.exe"
-    "pathofexilesteam.exe"
-    "steam.exe"
-    "steamservice.exe"
-    "steamwebhelper.exe"
-    # Riot
-    "riotclientservices.exe"
-    "valorant-win64-shipping.exe"
-    "vgc.exe"
+    # Copy and paste from your ZeroLatency.ps1
 )
-#########################################################
 
-#########################################################
-# STEP 3 - Add or remove Windows services to set to manual (if you already chose to set them to manual in the default script, skip this step)
-$ManualServices = @(
-    "ADPSvc"                                            # ADPSvc
-    "ALG"                                               # Application Layer Gateway Service
-    "ApxSvc"                                            # Windows Virtual Audio Device Proxy Service
-    "autotimesvc"                                       # Cellular Time
-    "AxInstSV"                                          # ActiveX Installer (AxInstSV)
-    "BDESVC"                                            # BitLocker Drive Encryption Service
-    "BTAGService"                                       # Bluetooth Audio Gateway Service
-    "BthAvctpSvc"                                       # AVCTP service
-    "bthserv"                                           # Bluetooth Support Service
-    "CertPropSvc"                                       # Certificate Propagation
-    "dcsvc"                                             # Declared Configuration(DC) service
-    "defragsvc"                                         # Optimize drives
-    "DeviceAssociationService"                          # Device Association Service
-    "diagsvc"                                           # Diagnostic Execution Service
-    "DiagTrack"                                         # Connected User Experiences and Telemetry
-    "DisplayEnhancementService"                         # Display Enhancement Service
-    "DmEnrollmentSvc"                                   # Device Management Enrollment Service
-    "dmwappushservice"                                  # Device Management Wireless Application Protocol (WAP) Push message Routing Service
-    "dot3svc"                                           # Wired AutoConfig
-    "DPS"                                               # Diagnostic Policy Service
-    "DsSvc"                                             # Data Sharing Service
-    "DusmSvc"                                           # Data Usage
-    "EapHost"                                           # Extensible Authentication Protocol
-    "edgeupdate"                                        # Microsoft Edge Update Service (edgeupdate)
-    "edgeupdatem"                                       # Microsoft Edge Update Service (edgeupdatem)
-    "EFS"                                               # Encrypting File System (EFS)
-    "fdPHost"                                           # Function Discovery Provider Host
-    "FDResPub"                                          # Function Discovery Resource Publication
-    "fhsvc"                                             # File History Service
-    "GameInputSvc"                                      # GameInput Service
-    "GraphicsPerfSvc"                                   # GraphicsPerfSvc
-    "hidserv"                                           # Human Interface Device Service
-    "icssvc"                                            # Windows Mobile Hotspot Service
-    "InventorySvc"                                      # Inventory and Compatibility Appraisal service
-    "iphlpsvc"                                          # IP Helper
-    "IpxlatCfgSvc"                                      # IP Translation Configuration Service
-    "lltdsvc"                                           # Link-Layer Topology Discovery Mapper
-    "lmhosts"                                           # TCP/IP NetBIOS Helper
-    "LxpSvc"                                            # Language Experience Service
-    "MapsBroker"                                        # Downloaded Maps Manager
-    "McmSvc"                                            # This service provides profile management for mobile connectivity modules
-    "McpManagementService"                              # McpManagementService
-    "MicrosoftEdgeElevationService"                     # Microsoft Edge Elevation Service (MicrosoftEdgeElevationService)
-    "MSDTC"                                             # Distributed Transaction Coordinator
-    "MSiSCSI"                                           # Microsoft iSCSI Initiator Service
-    "NaturalAuthentication"                             # Natural Authentication
-    "NcaSvc"                                            # Network Connectivity Assistant
-    "NcdAutoSetup"                                      # Network Connected Devices Auto-Setup
-    "Netlogon"                                          # Netlogon
-    "NetTcpPortSharing"                                 # Net.Tcp Port Sharing Service
-    "PcaSvc"                                            # Program Compatibility Assistant Service
-    "perceptionsimulation"                              # Windows Perception Simulation Service
-    "PhoneSvc"                                          # Phone Service
-    "pla"                                               # Performance Logs & Alerts
-    "PrintDeviceConfigurationService"                   # Print Device Configuration Service
-    "PrintNotify"                                       # Printer Extensions and Notifications
-    "PrintScanBrokerService"                            # PrintScanBrokerService
-    "QWAVE"                                             # Quality Windows Audio Video Experience
-    "RasAuto"                                           # Remote Access Auto Connection Manager
-    "RasMan"                                            # Remote Access Connection Manager
-    "refsdedupsvc"                                      # ReFS Dedup Service
-    "RemoteAccess"                                      # Routing and Remote Access
-    "RemoteRegistry"                                    # Remote Registry
-    "RetailDemo"                                        # Retail Demo Service
-    "RmSvc"                                             # Radio Management Service
-    "RpcLocator"                                        # Remote Procedure Call (RPC) Locator
-    "SCardSvr"                                          # Smart Card
-    "ScDeviceEnum"                                      # Smart Card Device Enumeration Service
-    "SCPolicySvc"                                       # Smart Card Removal Policy
-    "SDRSVC"                                            # Windows Backup
-    "seclogon"                                          # Secondary Logon
-    "SEMgrSvc"                                          # Payments and NFC/SE Manager
-    "SensorDataService"                                 # Sensor Data Service
-    "SensrSvc"                                          # Sensor Monitoring Service
-    "SessionEnv"                                        # Remote Desktop Configuration
-    "shpamsvc"                                          # Shared PC Account Manager
-    "smphost"                                           # Microsoft Storage Spaces SMP
-    "SmsRouter"                                         # Microsoft Windows SMS Router Service.
-    "SNMPTrap"                                          # SNMP Trap
-    "Spooler"                                           # Print Spooler
-    "SSDPSRV"                                           # SSDP Discovery
-    "ssh-agent"                                         # OpenSSH Authentication Agent
-    "SstpSvc"                                           # Secure Socket Tunneling Protocol Service
-    "svsvc"                                             # Spot Verifier
-    "SysMain"                                           # SysMain
-    "TapiSrv"                                           # Telephony
-    "TermService"                                       # Remote Desktop Services
-    "TieringEngineService"                              # Storage Tiers Management
-    "TrkWks"                                            # Distributed Link Tracking Client
-    "TroubleshootingSvc"                                # Recommended Troubleshooting Service
-    "tzautoupdate"                                      # Auto Time Zone Updater
-    "UmRdpService"                                      # Remote Desktop Services UserMode Port Redirector
-    "upnphost"                                          # UPnP Device Host
-    "WalletService"                                     # WalletService
-    "WarpJITSvc"                                        # Warp JIT Service
-    "wbengine"                                          # Block Level Backup Engine Service
-    "WbioSrvc"                                          # Windows Biometric Service
-    "wcncsvc"                                           # Windows Connect Now - Config Registrar
-    "WebClient"                                         # WebClient
-    "Wecsvc"                                            # Windows Event Collector
-    "WEPHOSTSVC"                                        # Windows Encryption Provider Host Service
-    "wercplsupport"                                     # Problem Reports Control Panel Support
-    "WerSvc"                                            # Windows Error Reporting Service
-    "WFDSConMgrSvc"                                     # Wi-Fi Direct Services Connection Manager Service
-    "whesvc"                                            # Windows Health and Optimized Experiences
-    "WiaRpc"                                            # Still Image Acquisition Events
-    "WinRM"                                             # Windows Remote Management (WS-Management)
-    "wisvc"                                             # Windows Insider Service
-    "WlanSvc"                                           # WLAN AutoConfig
-    "wlpasvc"                                           # Local Profile Assistant Service
-    "WManSvc"                                           # Windows Management Service
-    "wmiApSrv"                                          # WMI Performance Adapter
-    "WMPNetworkSvc"                                     # Windows Media Player Network Sharing Service
-    "workfolderssvc"                                    # Work Folders
-    "WpcMonSvc"                                         # Parental Controls
-    "WPDBusEnum"                                        # Portable Device Enumerator Service
-    "WSAIFabricSvc"                                     # WSAIFabricSvc
-    "WSearch"                                           # Windows Search
-    "WwanSvc"                                           # WWAN AutoConfig
-    "XblAuthManager"                                    # Xbox Live Auth Manager
-    "XblGameSave"                                       # Xbox Live Game Save
-    "XboxGipSvc"                                        # Xbox Accessory Management Service
-    "XboxNetApiSvc"                                     # Xbox Live Networking Service
-    "ZTHELPER"                                          # ZTDNS Helper service
+# Add services to be set to manual
+$DisabledServices = @(
+    # Copy and paste from your ZeroLatency.ps1
 )
-#########################################################
 
 #########################################################
 # END - Stop modifying
@@ -215,64 +50,36 @@ function Remove-Task {
     Unregister-ScheduledTask -TaskName $Name -Confirm:$False -ErrorAction SilentlyContinue
 }
 
-function Set-ControlFlowGuard {
-    param ([string]$Content)
-    $TempFile = [System.IO.Path]::GetTempFileName() + ".xml"
-    $Content | Out-File "$TempFile" -Encoding UTF8
-    Set-ProcessMitigation -PolicyFilePath "$TempFile"
-    Remove-Item "$TempFile" -Force
-}
-
 # Windows Defender settings
-@(
-    Set-MpPreference -PerformanceModeStatus Enabled             # Virus & threat protection > Virus & threat protection settings > Dev Drive protection
-    Set-MpPreference -MAPSReporting Disabled                    # Virus & threat protection > Virus & threat protection settings > Cloud-delivered protection
-    Set-MpPreference -SubmitSamplesConsent NeverSend            # Virus & threat protection > Virus & threat protection settings > Automatic sample submission
-    Set-MpPreference -EnableControlledFolderAccess Disabled     # Virus & threat protection > Ransomware protection > Controlled folder access
-    # > Registry (Security)                                     # App & browser control > Smart App Control
-    # > Registry (Security)                                     # App & browser control > Reputation-based protection > Check apps and files
-    # > Registry (Security)                                     # App & browser control > Reputation-based protection > SmartScreen for Microsoft Edge
-    # TODO: Find the correspondent registry                     # App & browser control > Reputation-based protection > Phishing protection
-    Set-MpPreference -PUAProtection Disabled                    # App & browser control > Reputation-based protection > Potentially unwanted app blocking
-    # > Registry (Security)                                     # App & browser control > Reputation-based protection > SmartScreen for Microsoft Store Apps
-) | ForEach-Object {
-    & $_
+@{
+    "PerformanceModeStatus" = "Enabled"             # Virus & threat protection > Virus & threat protection settings > Dev Drive protection
+    "MAPSReporting" = "Enabled"                     # Virus & threat protection > Virus & threat protection settings > Cloud-delivered protection
+    "SubmitSamplesConsent" = "AlwaysPrompt"         # Virus & threat protection > Virus & threat protection settings > Automatic sample submission
+    "EnableControlledFolderAccess" = "Enabled"      # Virus & threat protection > Ransomware protection > Controlled folder access
+    "PUAProtection" = "Enabled"                     # App & browser control > Reputation-based protection > Potentially unwanted app blocking
+}.GetEnumerator() | ForEach-Object {
+    Invoke-Custom "Set-MpPreference -$($_.Key) $($_.Value)"
 }
-Write-Custom "Successfully disabled less critical Windows Defender settings"
 
-# Windows Defender Scan folders to exclude
+# Windows Defender Scan folders to not exclude
 $ExcludedFolders | Where-Object { $_ } | ForEach-Object {
-    Add-MpPreference -ExclusionPath $_
+    Invoke-Custom "Remove-MpPreference -ExclusionPath $_"
 }
-Write-Custom "Successfully added to exclude Windows Defender folders"
 
-# Windows Defender Scan and Control Flow Guard processes to exclude
+# Windows Defender Scan and Exploit Protection processes to not exclude
 $ExcludedProcesses | Where-Object { $_ } | ForEach-Object {
-    Add-MpPreference -ExclusionProcess $_
-    $CFGRules += "  <AppConfig Executable=`"$_`">`n$($CFGRule.TrimEnd())`n  </AppConfig>`n"
+    Invoke-Custom "Remove-MpPreference -ExclusionProcess $_"
+    Invoke-Custom "Remove-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\$_' -Recurse"
 }
-Write-Custom "Successfully added to exclude Windows Defender processes"
-
-# Control Flow Guard settings
-Set-ControlFlowGuard -Content @"
-<?xml version="1.0" encoding="UTF-8"?>
-<MitigationPolicy>
-$CFGRules
-</MitigationPolicy>
-"@
-Write-Custom "Successfully added to exclude Control Flow Guard processes"
 
 # Services to set to manual
-$ManualServices | Where-Object { $_ } | ForEach-Object {
+$DisabledServices | Where-Object { $_ } | ForEach-Object {
     Invoke-Custom "Set-Service $_ -StartupType Manual"
 }
 
-# WinGet and PowerShell
-@(
-    "[Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', $Null, 'User')"
-    "[Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', $Null, 'Machine')"
-) | ForEach-Object {
-    Invoke-Custom $_
+# PowerShell
+@("User", "Machine") | ForEach-Object {
+    Invoke-Custom "[Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', `$Null, '$_')"
 }
 
 # Timers and Data Execution Prevention
@@ -296,14 +103,14 @@ $ManualServices | Where-Object { $_ } | ForEach-Object {
 
 # Windows Memory Management Agent
 @(
-    "Disable-MMAgent -ApplicationLaunchPrefetching"
-    "Disable-MMAgent -ApplicationPreLaunch"
-    "Disable-MMAgent -MemoryCompression"
-    "Disable-MMAgent -OperationAPI"
+    "Enable-MMAgent -ApplicationLaunchPrefetching"
+    "Enable-MMAgent -ApplicationPreLaunch"
+    "Enable-MMAgent -MemoryCompression"
+    "Enable-MMAgent -OperationAPI"
     "Disable-MMAgent -PageCombining"
-    "Set-MMAgent -MaxOperationAPIFiles 1"
+    "Set-MMAgent -MaxOperationAPIFiles 512"
 ) | ForEach-Object {
-    Invoke-Custom ($_ -match "^Disable-MMAgent" ? "$_ -ErrorAction SilentlyContinue" : $_)
+    Invoke-Custom ($_ -match "^able-MMAgent" ? "$_ -ErrorAction SilentlyContinue" : $_)
 }
 
 # Global network settings
@@ -311,10 +118,10 @@ $ManualServices | Where-Object { $_ } | ForEach-Object {
     "Set-NetOffloadGlobalSetting -Chimney Disabled"
     "Set-NetOffloadGlobalSetting -NetworkDirect Enabled"
     "Set-NetOffloadGlobalSetting -NetworkDirectAcrossIPSubnets Blocked"
-    "Set-NetOffloadGlobalSetting -PacketCoalescingFilter Disabled"
-    "Set-NetOffloadGlobalSetting -ReceiveSegmentCoalescing Disabled"
-    "Set-NetOffloadGlobalSetting -ReceiveSideScaling $($RSSQueues -gt 0 ? 'Enabled' : 'Disabled')"
-    "Set-NetOffloadGlobalSetting -TaskOffload $($Offloads -gt 0 ? 'Enabled' : 'Disabled')"
+    "Set-NetOffloadGlobalSetting -PacketCoalescingFilter Enabled"
+    "Set-NetOffloadGlobalSetting -ReceiveSegmentCoalescing Enabled"
+    "Set-NetOffloadGlobalSetting -ReceiveSideScaling Enabled"
+    "Set-NetOffloadGlobalSetting -TaskOffload Enabled"
 ) | ForEach-Object {
     Invoke-Custom $_
 }
