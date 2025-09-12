@@ -110,7 +110,7 @@ $DisabledServices | Where-Object { $_ } | ForEach-Object {
     "Disable-MMAgent -PageCombining"
     "Set-MMAgent -MaxOperationAPIFiles 512"
 ) | ForEach-Object {
-    Invoke-Custom ($_ -match "^able-MMAgent" ? "$_ -ErrorAction SilentlyContinue" : $_)
+    Invoke-Custom $_
 }
 
 # Global network settings
