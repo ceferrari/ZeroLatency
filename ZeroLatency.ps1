@@ -49,7 +49,7 @@ $RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.
 
 # STEP 1 - Variables to modify (network advanced)
 $AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental
-$TCPOptions = 1         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
+$TCPOptions = 3         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
 $TCPRetries = 2         # TCP Retransmission Limits        2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
 $InitialRTO = 2000      # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
 $ROOLimit = 10          # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
