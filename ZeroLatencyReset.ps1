@@ -201,14 +201,14 @@ Write-Custom "Successfully reset Power-Saving and Wake on Magic Packet for appli
 Get-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Enum\USB\*\*\Device Parameters" | ForEach-Object {
     $Path = $_.PSPath
     $Props = Get-ItemProperty -Path $Path
-    @{
+    @(
         "AllowIdleIrpInD3"
         "DeviceSelectiveSuspended"
         "EnhancedPowerManagementEnabled"
         "SelectiveSuspendEnabled"
         "SelectiveSuspendOn"
-    }.GetEnumerator() | ForEach-Object {
-        if ($Props.PSObject.Properties.Name -notcontains $_.Key) { return }
+    ) | ForEach-Object {
+        if ($Props.PSObject.Properties.Name -notcontains $_) { return }
         Remove-ItemProperty -Path $Path -Name $_ -ErrorAction SilentlyContinue
     }
 }
