@@ -810,6 +810,11 @@ $AdapterProperties = @(
 # Adapter settings optimization
 Get-NetAdapter -Physical | ForEach-Object {
     $Adapter = $_
+    @("ipv4", "ipv6") | ForEach-Object {
+        $X = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$X store=persistent"; Invoke-Custom $X; $NetshCommands += "$X`n"
+        $Y = "netsh int $_ set dns $($Adapter.ifIndex) static $($DNS["$_-1"]) primary"; Invoke-Custom $Y; $NetshCommands += "$Y`n"
+        $Z = "netsh int $_ add dns $($Adapter.ifIndex) $($DNS["$_-2"]) index=2"; Invoke-Custom $Z; $NetshCommands += "$Z`n"
+    }
     Invoke-Custom "Reset-NetAdapterAdvancedProperty -NoRestart -Name '$($Adapter.Name)' -DisplayName '*'"
     Invoke-Custom "Get-NetAdapterBinding -Name '$($Adapter.Name)' | Where-Object { `$_.ComponentID -notin @('ms_tcpip', 'ms_tcpip6') } | Disable-NetAdapterBinding"
     $AdapterProperties | ForEach-Object {
@@ -832,12 +837,6 @@ Get-NetAdapter -Physical | ForEach-Object {
         Set-ItemProperty -Path $_.PSPath -Name "TCPInitialRtt"   -Type "DWord" -Value $InitialRTO
         Write-Custom "Successfully fixed InitialRTO on $($Adapter.Name) $($Adapter.InterfaceGuid)"
     }
-    @("ipv4", "ipv6") | ForEach-Object {
-        $X = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$X store=persistent"; Invoke-Custom $X; $NetshCommands += "$X`n"
-        $Y = "netsh int $_ set dns $($Adapter.ifIndex) static $($DNS["$_-1"]) primary"; Invoke-Custom $Y; $NetshCommands += "$Y`n"
-        $Z = "netsh int $_ add dns $($Adapter.ifIndex) $($DNS["$_-2"]) index=2"; Invoke-Custom $Z; $NetshCommands += "$Z`n"
-    }
-    Write-Custom "Successfully set MTU and DNS on $($Adapter.Name) $($Adapter.InterfaceGuid)"
 }
 
 # Power Plan download, import and activation

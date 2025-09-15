@@ -149,6 +149,10 @@ $DisabledServices | Where-Object { $_ } | ForEach-Object {
 # Adapter settings optimization
 Get-NetAdapter -Physical | ForEach-Object {
     $Adapter = $_
+    @("ipv4", "ipv6") | ForEach-Object {
+        $X = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=1500"; Invoke-Custom "$X store=persistent"; Invoke-Custom $X
+        $Y = "netsh int $_ set dns $($Adapter.ifIndex) dhcp"; Invoke-Custom $Y
+    }
     Invoke-Custom "Reset-NetAdapterAdvancedProperty -NoRestart -Name '$($Adapter.Name)' -DisplayName '*'"
     Invoke-Custom "Get-NetAdapterBinding -Name '$($Adapter.Name)' | Where-Object { `$_.ComponentID -notin @('ms_implat') } | Enable-NetAdapterBinding"
     Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces" | ForEach-Object {
@@ -165,11 +169,6 @@ Get-NetAdapter -Physical | ForEach-Object {
         Remove-ItemProperty -Path $_.PSPath -Name "TCPInitialRtt" -ErrorAction SilentlyContinue
         Write-Custom "Successfully reset InitialRTO on $($Adapter.Name) $($Adapter.InterfaceGuid)"
     }
-    @("ipv4", "ipv6") | ForEach-Object {
-        $X = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=1500"; Invoke-Custom "$X store=persistent"; Invoke-Custom $X
-        $Y = "netsh int $_ set dns $($Adapter.ifIndex) dhcp"; Invoke-Custom $Y
-    }
-    Write-Custom "Successfully reset MTU and DNS on $($Adapter.Name) $($Adapter.InterfaceGuid)"
 }
 
 # Power Plan download, import and activation
