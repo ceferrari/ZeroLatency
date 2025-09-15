@@ -51,7 +51,7 @@ $RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.
 $AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental
 $TCPOptions = 1         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
 $TCPRetries = 2         # TCP Retransmission Limits        2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
-$InitialRTO = 1000      # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
+$InitialRTO = 2000      # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
 $ROOLimit = 10          # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
 #########################################################
 
@@ -767,12 +767,12 @@ $AdapterProperties = @(
     "netsh int tcp set global initialrto=$($InitialRTO)"
     "netsh int tcp set global maxsynretransmissions=$($TCPRetries)"
     "netsh int tcp set global nonsackrttresiliency=disabled"
-    "netsh int tcp set global pacingprofile=initialwindow"
-    "netsh int tcp set global prr=disabled"
+    "netsh int tcp set global pacingprofile=always"
+    "netsh int tcp set global prr=enabled"
     "netsh int tcp set global rsc=disabled"
     "netsh int tcp set global rss=$($RSSQueues -gt 0 ? 'enabled' : 'disabled')"
     "netsh int tcp set global timestamps=$($TCPOptions -in 2, 3 ? 'enabled' : 'disabled')"
-    "netsh int tcp set heuristics $($TCPOptions -in 1, 3 ? 'wsh=enabled forcews=enabled' : 'wsh=disabled forcews=disabled')"
+    "netsh int tcp set heuristics forcews=disabled wsh=disabled"
     "netsh int tcp set security mpp=disabled"
     "netsh int tcp set security profiles=disabled"
     "netsh int tcp set supplemental {template} congestionprovider=bbr2"
@@ -786,7 +786,7 @@ $AdapterProperties = @(
     "netsh int teredo set state disabled"
     "netsh int udp set global uro=disabled"
     "netsh int udp set global uso=disabled"
-    "netsh winsock set autotuning on"
+    "netsh winsock set autotuning off"
 ) | ForEach-Object {
     $X = $_
     if ($X -match "^netsh int ip") {
@@ -810,13 +810,8 @@ $AdapterProperties = @(
 # Adapter settings optimization
 Get-NetAdapter -Physical | ForEach-Object {
     $Adapter = $_
-    @("ipv4", "ipv6") | ForEach-Object {
-        $X = "netsh int $_ set dns $($Adapter.ifIndex) static $($DNS["$_-1"]) primary"; Invoke-Custom $X; $NetshCommands += "$X`n"
-        $Y = "netsh int $_ add dns $($Adapter.ifIndex) $($DNS["$_-2"]) index=2"; Invoke-Custom $Y; $NetshCommands += "$Y`n"
-        $Z = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$Z store=persistent"; Invoke-Custom $Z; $NetshCommands += "$Z`n"
-    }
-    Invoke-Custom "Get-NetAdapterBinding -Name '$($Adapter.Name)' | Where-Object { `$_.ComponentID -notin @('ms_tcpip', 'ms_tcpip6') } | Disable-NetAdapterBinding"
     Invoke-Custom "Reset-NetAdapterAdvancedProperty -NoRestart -Name '$($Adapter.Name)' -DisplayName '*'"
+    Invoke-Custom "Get-NetAdapterBinding -Name '$($Adapter.Name)' | Where-Object { `$_.ComponentID -notin @('ms_tcpip', 'ms_tcpip6') } | Disable-NetAdapterBinding"
     $AdapterProperties | ForEach-Object {
         Invoke-Custom "$_ -NoRestart -Name '$($Adapter.Name)'"
     }
@@ -837,6 +832,12 @@ Get-NetAdapter -Physical | ForEach-Object {
         Set-ItemProperty -Path $_.PSPath -Name "TCPInitialRtt"   -Type "DWord" -Value $InitialRTO
         Write-Custom "Successfully fixed InitialRTO on $($Adapter.Name) $($Adapter.InterfaceGuid)"
     }
+    @("ipv4", "ipv6") | ForEach-Object {
+        $X = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$X store=persistent"; Invoke-Custom $X; $NetshCommands += "$X`n"
+        $Y = "netsh int $_ set dns $($Adapter.ifIndex) static $($DNS["$_-1"]) primary"; Invoke-Custom $Y; $NetshCommands += "$Y`n"
+        $Z = "netsh int $_ add dns $($Adapter.ifIndex) $($DNS["$_-2"]) index=2"; Invoke-Custom $Z; $NetshCommands += "$Z`n"
+    }
+    Write-Custom "Successfully set MTU and DNS on $($Adapter.Name) $($Adapter.InterfaceGuid)"
 }
 
 # Power Plan download, import and activation
@@ -875,33 +876,36 @@ Get-CimInstance Win32_PnPEntity | ForEach-Object {
 Write-Custom "Successfully disabled Power-Saving and Wake on Magic Packet for applicable devices"
 
 # Selective Suspend
-$SelsusProps = @{
-    "AllowIdleIrpInD3"               = @{ Type = "DWord";  Value = 0 }
-    "DeviceSelectiveSuspended"       = @{ Type = "DWord";  Value = 0 }
-    "EnhancedPowerManagementEnabled" = @{ Type = "DWord";  Value = 0 }
-    "SelectiveSuspendEnabled"        = @{ Type = "Binary"; Value = ([byte[]](0x00)) }
-    "SelectiveSuspendOn"             = @{ Type = "DWord";  Value = 0 }
-}
 Get-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Enum\USB\*\*\Device Parameters" | ForEach-Object {
     $Path = $_.PSPath
-    $DeviceProps = Get-ItemProperty -Path $Path
-    $SelsusProps.Keys | ForEach-Object {
-        if ($DeviceProps.PSObject.Properties.Name -contains $_) {
-            Set-ItemProperty -Path $Path -Name $_ -Type $SelsusProps[$_].Type -Value $SelsusProps[$_].Value
-        }
+    $Props = Get-ItemProperty -Path $Path
+    @{
+        "AllowIdleIrpInD3"               = @{ Type = "DWord";  Value = 0 }
+        "DeviceSelectiveSuspended"       = @{ Type = "DWord";  Value = 0 }
+        "EnhancedPowerManagementEnabled" = @{ Type = "DWord";  Value = 0 }
+        "SelectiveSuspendEnabled"        = @{ Type = "Binary"; Value = ([byte[]](0x00)) }
+        "SelectiveSuspendOn"             = @{ Type = "DWord";  Value = 0 }
+    }.GetEnumerator() | ForEach-Object {
+        if ($Props.PSObject.Properties.Name -notcontains $_.Key) { return }
+        Set-ItemProperty -Path $Path -Name $_.Key -Type $_.Value.Type -Value $_.Value.Value
     }
 }
 Write-Custom "Successfully disabled Selective Suspend for applicable devices"
 
 # Background Access for UWP applications
 Get-ChildItem -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" | Where-Object { $_.PSChildName -notmatch "NVIDIA|Realtek|OneDrive" } | ForEach-Object {
-    Set-ItemProperty -Path $_.PSPath -Name "Disabled"                -Type "DWord" -Value 1
-    Set-ItemProperty -Path $_.PSPath -Name "DisabledBySystem"        -Type "DWord" -Value 1
-    Set-ItemProperty -Path $_.PSPath -Name "DisabledByUser"          -Type "DWord" -Value 1
-    Set-ItemProperty -Path $_.PSPath -Name "IgnoreBatterySaver"      -Type "DWord" -Value 0
-    Set-ItemProperty -Path $_.PSPath -Name "NCBEnabled"              -Type "DWord" -Value 0
-    Set-ItemProperty -Path $_.PSPath -Name "SleepDisabled"           -Type "DWord" -Value 1
-    Set-ItemProperty -Path $_.PSPath -Name "SleepIgnoreBatterySaver" -Type "DWord" -Value 0
+    $Path = $_.PSPath
+    @{
+        "Disabled"                = @{ Type = "DWord"; Value = 1 }
+        "DisabledBySystem"        = @{ Type = "DWord"; Value = 1 }
+        "DisabledByUser"          = @{ Type = "DWord"; Value = 1 }
+        "IgnoreBatterySaver"      = @{ Type = "DWord"; Value = 0 }
+        "NCBEnabled"              = @{ Type = "DWord"; Value = 0 }
+        "SleepDisabled"           = @{ Type = "DWord"; Value = 1 }
+        "SleepIgnoreBatterySaver" = @{ Type = "DWord"; Value = 0 }
+    }.GetEnumerator() | ForEach-Object {
+        Set-ItemProperty -Path $Path -Name $_.Key -Type $_.Value.Type -Value $_.Value.Value
+    }
 }
 Write-Custom "Successfully disabled Background Access for UWP applications"
 

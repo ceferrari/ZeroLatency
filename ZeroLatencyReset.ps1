@@ -149,27 +149,27 @@ $DisabledServices | Where-Object { $_ } | ForEach-Object {
 # Adapter settings optimization
 Get-NetAdapter -Physical | ForEach-Object {
     $Adapter = $_
-    @("ipv4", "ipv6") | ForEach-Object {
-        $X = "netsh int $_ set dns $($Adapter.ifIndex) static $($DNS["$_-1"]) primary"; Invoke-Custom $X; $NetshCommands += "$X`n"
-        $Y = "netsh int $_ add dns $($Adapter.ifIndex) $($DNS["$_-2"]) index=2"; Invoke-Custom $Y; $NetshCommands += "$Y`n"
-        $Z = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$Z store=persistent"; Invoke-Custom $Z; $NetshCommands += "$Z`n"
-    }
-    Invoke-Custom "Get-NetAdapterBinding -Name '$($Adapter.Name)' | Where-Object { `$_.ComponentID -notin @('ms_tcpip', 'ms_tcpip6') } | Disable-NetAdapterBinding"
     Invoke-Custom "Reset-NetAdapterAdvancedProperty -NoRestart -Name '$($Adapter.Name)' -DisplayName '*'"
+    Invoke-Custom "Get-NetAdapterBinding -Name '$($Adapter.Name)' | Where-Object { `$_.ComponentID -notin @('ms_implat') } | Enable-NetAdapterBinding"
     Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces" | ForEach-Object {
         if ("Tcpip_$($Adapter.InterfaceGuid)" -ne $_.PSChildName) { return }
-        Set-ItemProperty -Path $_.PSPath -Name "NetbiosOptions" -Type "DWord" -Value 2
-        Write-Custom "Successfully disabled NetBIOS on $($Adapter.Name) $($Adapter.InterfaceGuid)"
+        Set-ItemProperty -Path $_.PSPath -Name "NetbiosOptions" -Type "DWord" -Value 0
+        Write-Custom "Successfully reset NetBIOS on $($Adapter.Name) $($Adapter.InterfaceGuid)"
     }
     Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | ForEach-Object {
         if ($Adapter.InterfaceGuid -ne $_.PSChildName) { return }
-        Set-ItemProperty -Path $_.PSPath -Name "TcpAckFrequency" -Type "DWord" -Value 1
-        Set-ItemProperty -Path $_.PSPath -Name "TcpDelAckTicks"  -Type "DWord" -Value 0
-        Set-ItemProperty -Path $_.PSPath -Name "TCPNoDelay"      -Type "DWord" -Value 1
-        Write-Custom "Successfully disabled Nagle's on $($Adapter.Name) $($Adapter.InterfaceGuid)"
-        Set-ItemProperty -Path $_.PSPath -Name "TCPInitialRtt"   -Type "DWord" -Value $InitialRTO
-        Write-Custom "Successfully fixed InitialRTO on $($Adapter.Name) $($Adapter.InterfaceGuid)"
+        Remove-ItemProperty -Path $_.PSPath -Name "TcpAckFrequency" -ErrorAction SilentlyContinue
+        Remove-ItemProperty -Path $_.PSPath -Name "TcpDelAckTicks" -ErrorAction SilentlyContinue
+        Remove-ItemProperty -Path $_.PSPath -Name "TCPNoDelay" -ErrorAction SilentlyContinue
+        Write-Custom "Successfully reset Nagle's on $($Adapter.Name) $($Adapter.InterfaceGuid)"
+        Remove-ItemProperty -Path $_.PSPath -Name "TCPInitialRtt" -ErrorAction SilentlyContinue
+        Write-Custom "Successfully reset InitialRTO on $($Adapter.Name) $($Adapter.InterfaceGuid)"
     }
+    @("ipv4", "ipv6") | ForEach-Object {
+        $X = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=1500"; Invoke-Custom "$X store=persistent"; Invoke-Custom $X
+        $Y = "netsh int $_ set dns $($Adapter.ifIndex) dhcp"; Invoke-Custom $Y
+    }
+    Write-Custom "Successfully reset MTU and DNS on $($Adapter.Name) $($Adapter.InterfaceGuid)"
 }
 
 # Power Plan download, import and activation
@@ -198,33 +198,36 @@ Get-CimInstance Win32_PnPEntity | ForEach-Object {
 Write-Custom "Successfully reset Power-Saving and Wake on Magic Packet for applicable devices"
 
 # Selective Suspend
-$SelsusProps = @{
-    "AllowIdleIrpInD3"               = @{ Type = "DWord";  Value = 0 }
-    "DeviceSelectiveSuspended"       = @{ Type = "DWord";  Value = 0 }
-    "EnhancedPowerManagementEnabled" = @{ Type = "DWord";  Value = 0 }
-    "SelectiveSuspendEnabled"        = @{ Type = "Binary"; Value = ([byte[]](0x00)) }
-    "SelectiveSuspendOn"             = @{ Type = "DWord";  Value = 0 }
-}
 Get-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Enum\USB\*\*\Device Parameters" | ForEach-Object {
     $Path = $_.PSPath
-    $DeviceProps = Get-ItemProperty -Path $Path
-    $SelsusProps.Keys | ForEach-Object {
-        if ($DeviceProps.PSObject.Properties.Name -contains $_) {
-            Set-ItemProperty -Path $Path -Name $_ -Type $SelsusProps[$_].Type -Value $SelsusProps[$_].Value
-        }
+    $Props = Get-ItemProperty -Path $Path
+    @{
+        "AllowIdleIrpInD3"
+        "DeviceSelectiveSuspended"
+        "EnhancedPowerManagementEnabled"
+        "SelectiveSuspendEnabled"
+        "SelectiveSuspendOn"
+    }.GetEnumerator() | ForEach-Object {
+        if ($Props.PSObject.Properties.Name -notcontains $_.Key) { return }
+        Remove-ItemProperty -Path $Path -Name $_ -ErrorAction SilentlyContinue
     }
 }
 Write-Custom "Successfully reset Selective Suspend for applicable devices"
 
 # Background Access for UWP applications
 Get-ChildItem -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" | Where-Object { $_.PSChildName -notmatch "NVIDIA|Realtek|OneDrive" } | ForEach-Object {
-    Set-ItemProperty -Path $_.PSPath -Name "Disabled"                -Type "DWord" -Value 1
-    Set-ItemProperty -Path $_.PSPath -Name "DisabledBySystem"        -Type "DWord" -Value 1
-    Set-ItemProperty -Path $_.PSPath -Name "DisabledByUser"          -Type "DWord" -Value 1
-    Set-ItemProperty -Path $_.PSPath -Name "IgnoreBatterySaver"      -Type "DWord" -Value 0
-    Set-ItemProperty -Path $_.PSPath -Name "NCBEnabled"              -Type "DWord" -Value 0
-    Set-ItemProperty -Path $_.PSPath -Name "SleepDisabled"           -Type "DWord" -Value 1
-    Set-ItemProperty -Path $_.PSPath -Name "SleepIgnoreBatterySaver" -Type "DWord" -Value 0
+    $Path = $_.PSPath
+    @(
+        "Disabled"
+        "DisabledBySystem"
+        "DisabledByUser"
+        "IgnoreBatterySaver"
+        "NCBEnabled"
+        "SleepDisabled"
+        "SleepIgnoreBatterySaver"
+    ) | ForEach-Object {
+        Remove-ItemProperty -Path $Path -Name $_ -ErrorAction SilentlyContinue
+    }
 }
 Write-Custom "Successfully reset Background Access for UWP applications"
 
