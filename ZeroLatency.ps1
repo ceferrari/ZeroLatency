@@ -49,7 +49,7 @@ $RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.
 
 # STEP 1 - Variables to modify (network advanced)
 $AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental
-$TCPOptions = 3         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
+$TCPOptions = 1         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
 $TCPRetries = 2         # TCP Retransmission Limits        2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
 $InitialRTO = 2000      # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
 $ROOLimit = 10          # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
@@ -760,22 +760,23 @@ $AdapterProperties = @(
     "netsh int ipv6 set global recursivereassembly=disabled"
     "netsh int ipv6 set global slaacprivacylevel=0"
     "netsh int tcp set global autotuninglevel=$($ATL[$AutoTuning])"
-    "netsh int tcp set global ecncapability=disabled"
+    "netsh int tcp set global dca=$($AutoTuning -gt 0 ? 'enabled' : 'disabled')"
+    "netsh int tcp set global ecncapability=$($AutoTuning -gt 0 ? 'enabled' : 'disabled')"
     "netsh int tcp set global fastopen=enabled"
     "netsh int tcp set global fastopenfallback=enabled"
     "netsh int tcp set global hystart=disabled"
     "netsh int tcp set global initialrto=$($InitialRTO)"
     "netsh int tcp set global maxsynretransmissions=$($TCPRetries)"
-    "netsh int tcp set global nonsackrttresiliency=disabled"
-    "netsh int tcp set global pacingprofile=always"
-    "netsh int tcp set global prr=enabled"
+    "netsh int tcp set global nonsackrttresiliency=$($AutoTuning -gt 0 ? 'enabled' : 'disabled')"
+    "netsh int tcp set global pacingprofile=$($AutoTuning -gt 0 ? 'always' : 'off')"
+    "netsh int tcp set global prr=$($AutoTuning -gt 0 ? 'enabled' : 'disabled')"
     "netsh int tcp set global rsc=disabled"
     "netsh int tcp set global rss=$($RSSQueues -gt 0 ? 'enabled' : 'disabled')"
     "netsh int tcp set global timestamps=$($TCPOptions -in 2, 3 ? 'enabled' : 'disabled')"
     "netsh int tcp set heuristics forcews=disabled wsh=disabled"
     "netsh int tcp set security mpp=disabled"
     "netsh int tcp set security profiles=disabled"
-    "netsh int tcp set supplemental {template} congestionprovider=bbr2"
+    "netsh int tcp set supplemental {template} congestionprovider=$($AutoTuning -gt 0 ? 'bbr2' : 'newreno')"
     "netsh int tcp set supplemental {template} delayedackfrequency=1"
     "netsh int tcp set supplemental {template} delayedacktimeout=10"
     "netsh int tcp set supplemental {template} enablecwndrestart=disabled"
@@ -1686,6 +1687,7 @@ $(Split-Registry -Content @"
 "DefaultReceiveWindow"=dword:00000000
 "DefaultSendWindow"=dword:00000000
 "DynamicSendBufferDisable"=dword:00000001
+"FastCopyReceiveThreshold"=dword:$('{0:x8}' -f $MTU)
 "FastSendDatagramThreshold"=dword:$('{0:x8}' -f $MTU)
 
 ; Disable File and Printer Sharing
@@ -1727,6 +1729,7 @@ $(Split-Registry -Content @"
 "MaxUserPort"=dword:0000fffe
 "PortTrackerEnabledMode"=dword:00000000
 "SackOpts"=dword:00000001
+"StrictTimeWaitSeqCheck"=dword:00000001
 "Tcp1323Opts"=dword:0000000$($TCPOptions)
 "TcpMaxConnectRetransmissions"=dword:0000000$($TCPRetries)
 "TcpMaxDataRetransmissions"=dword:0000000$($TCPRetries)
