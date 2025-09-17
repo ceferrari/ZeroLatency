@@ -1662,8 +1662,8 @@ Windows Registry Editor Version 5.00
 $(Split-Registry -Content @"
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER]
-"explorer.exe"=dword:00000000
-"iexplore.exe"=dword:00000000
+"explorer.exe"=dword:00000010
+"iexplore.exe"=dword:00000010
 "@)
 
 ; Disable Nagle's algorithm for MSMQ (Microsoft Message Queuing)
