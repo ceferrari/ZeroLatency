@@ -418,6 +418,10 @@ $ATL = @{
 }
 
 # NIC Advanced Properties
+# Get-NetAdapterAdvancedProperty -AllProperties |
+#     Where-Object { $_.DisplayName -ne $null -and $_.DisplayValue -ne $null } |
+#     Sort-Object -Property RegistryKeyword |
+#     Select-Object -Property Name, RegistryKeyword, DisplayValue, DisplayName
 $NIC = @{
     1 = [ordered]@{ # Realtek
         "*EEE" = 0
@@ -454,7 +458,32 @@ $NIC = @{
         "WolShutdownLinkSpeed" = 2
     }
     2 = [ordered]@{ # Intel
-        # TODO: Find and fill properties for Intel NICs
+        "*EEE" = 0
+        "*FlowControl" = 0
+        "*InterruptModeration" = 0
+        "*IPChecksumOffloadIPv4" = $Offloads
+        "*JumboPacket" = 1514
+        "*LsoV2IPv4" = 0
+        "*LsoV2IPv6" = 0
+        "*PMARPOffload" = 0
+        "*PMNSOffload" = 0
+        "*PriorityVLANTag" = 0
+        "*ReceiveBuffers" = $RBuffers
+        "*SpeedDuplex" = 0
+        "*TCPChecksumOffloadIPv4" = $Offloads
+        "*TCPChecksumOffloadIPv6" = $Offloads
+        "*TransmitBuffers" = $TBuffers
+        "*UDPChecksumOffloadIPv4" = $Offloads
+        "*UDPChecksumOffloadIPv6" = $Offloads
+        "*WakeOnMagicPacket" = 0
+        "*WakeOnPattern" = 0
+        "AdvancedEEE" = 0
+        "EnableGreenEthernet" = 0
+        "GigaLite" = 0
+        "PowerSavingMode" = 0
+        "RegVlanid" = 0
+        "S5WakeOnLan" = 0
+        "WolShutdownLinkSpeed" = 2
     }
 }[$NICBrand]
 
