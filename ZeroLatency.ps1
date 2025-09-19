@@ -838,7 +838,7 @@ $AdapterProperties = @(
 }
 
 # Adapter settings optimization
-Get-NetAdapter -Physical | ForEach-Object {
+Get-NetAdapter -Physical | Where-Object { $_.InterfaceType -eq 6 } | ForEach-Object {
     $Adapter = $_
     @("ipv4", "ipv6") | ForEach-Object {
         $X = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$X store=persistent"; Invoke-Custom $X; $NetshCommands += "$X`n"
@@ -2094,8 +2094,8 @@ New-Task -Name "ZeroLatency (netsh)" -Command $NetshCommands
 Write-Custom "Successfully created a task with netsh commands"
 
 # Network adapters restart
-Get-NetAdapter -Physical | ForEach-Object { Restart-NetAdapter -Name "$($_.Name)" }
-Write-Custom "Successfully restarted all physical network adapters"
+Get-NetAdapter -Physical | Where-Object { $_.InterfaceType -eq 6 } | ForEach-Object { Restart-NetAdapter -Name "$($_.Name)" }
+Write-Custom "Successfully restarted physical wired network adapters"
 
 # Final message
 Write-Host "`n`e[1;35mScript complete! Restart recommended to apply all changes`n`nPress any key to exit...`e[0m"
