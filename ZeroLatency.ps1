@@ -694,7 +694,7 @@ $UninstalledPackages | Where-Object { $_ } | ForEach-Object {
 
 # Optional features to disable
 $OptionalFeatures | Where-Object { $_ } | ForEach-Object {
-    Get-WindowsOptionalFeature -Online -FeatureName $_ | Select-Object -ExpandProperty FeatureName | ForEach-Object {
+    Get-WindowsOptionalFeature -Online -FeatureName $_ | Where-Object { $_.State -eq "Enabled" } | Select-Object -ExpandProperty FeatureName | ForEach-Object {
         Invoke-Custom "Disable-WindowsOptionalFeature -Online -NoRestart -FeatureName $_"
     }
 }
