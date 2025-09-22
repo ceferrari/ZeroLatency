@@ -405,6 +405,31 @@ $ExploitProtections = @(
     "UserShadowStackStrictMode"
 )
 
+# Optional features to be disabled
+$OptionalFeatures = @(
+    "Client-ProjFS"
+    "DirectPlay"
+    "IIS-*"
+    "LegacyComponents"
+    "Microsoft-RemoteDesktopConnection"
+    "MSMQ-*"
+    "MSRDC-Infrastructure"
+    "NetFx3"
+    "Printing-Foundation-*"
+    "Printing-XPSServices-*"
+    "Recall"
+    "SearchEngine-Client-Package"
+    "SimpleTCP"
+    "SMB1*"
+    "TelnetClient"
+    "TFTP"
+    "TIFFIFilter"
+    "WAS-*"
+    "WCF-*"
+    "Windows-Identity-Foundation"
+    "WorkFolders-Client"
+)
+
 # Number of *physical* cores of the CPU (e.g., 6 for a 6C/12T model)
 $NumCores = (Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum
 
@@ -665,6 +690,13 @@ $DisabledServices | Where-Object { $_ } | ForEach-Object {
 $UninstalledPackages | Where-Object { $_ } | ForEach-Object {
     Invoke-Custom "Get-AppxProvisionedPackage -Online | Where-Object { `$_.DisplayName -like '*$_*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName `$_.PackageName }"
     Invoke-Custom "Get-AppxPackage -AllUsers | Where-Object { `$_.Name -like '*$_*' } | ForEach-Object { Remove-AppxPackage -AllUsers -Package `$_.PackageFullName }"
+}
+
+# Optional features to disable
+$OptionalFeatures | Where-Object { $_ } | ForEach-Object {
+    Get-WindowsOptionalFeature -Online -FeatureName $_ | Select-Object -ExpandProperty FeatureName | ForEach-Object {
+        Invoke-Custom "Disable-WindowsOptionalFeature -Online -NoRestart -FeatureName $_"
+    }
 }
 
 # WinGet and PowerShell
@@ -1091,6 +1123,14 @@ Windows Registry Editor Version 5.00
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}]
 
+; Add "Copy To folder..." to right-click menu
+[HKEY_CLASSES_ROOT\AllFilesystemObjects\shellex\ContextMenuHandlers\Copy To]
+@="{C2FBB630-2971-11D1-A18C-00C04FD75D13}"
+
+; Add "Move To folder..." to right-click menu
+[HKEY_CLASSES_ROOT\AllFilesystemObjects\shellex\ContextMenuHandlers\Move To]
+@="{C2FBB631-2971-11D1-A18C-00C04FD75D13}"
+
 ; Disable Let Windows manage my default printer
 [HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\Windows]
 "LegacyDefaultPrinterMode"=dword:00000001
@@ -1136,6 +1176,11 @@ $(Split-Registry -Content @"
 "@)
 ; ---
 
+; Disable AutoComplete
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoComplete]
+"Append Completion"="no"
+"AutoSuggest"="no"
+
 ; Disable AutoPlay
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers]
 "DisableAutoplay"=dword:00000001
@@ -1167,6 +1212,7 @@ $SubscribedContents
 
 ; Tune Start Menu and Taskbar
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"DisallowShaking"=dword:00000001
 "LaunchTo"=dword:00000001
 "ShowSyncProviderNotifications"=dword:00000000
 "ShowTaskViewButton"=dword:00000000
@@ -1661,7 +1707,12 @@ $(Split-Registry -Content @"
 
 ; Disable Service Host Splitting Threshold
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control]
+"SvcHostSplitDisable"=dword:00000000
 "SvcHostSplitThresholdInKB"=dword:00000000
+
+; Disable Windows Platform Binary Table
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager]
+"DisableWpbtExecution"=dword:00000001
 
 ; Tune DPC and Timer Resolution
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\kernel]
