@@ -1471,7 +1471,7 @@ Windows Registry Editor Version 5.00
 "DoubleClickWidth"="4"
 "ExtendedSounds"="No"
 "MouseHoverHeight"="4"
-"MouseHoverTime"="10"
+"MouseHoverTime"="400"
 "MouseHoverWidth"="4"
 "MouseSensitivity"="10"
 "MouseSpeed"="0"
