@@ -119,6 +119,7 @@ $DisabledServices = @(
     "CertPropSvc"                                       # Certificate Propagation
     "dcsvc"                                             # Declared Configuration(DC) service
     "DeviceAssociationService"                          # Device Association Service
+    "DevQueryBroker"                                    # DevQuery Background Discovery Broker
     "diagsvc"                                           # Diagnostic Execution Service
     "DiagTrack"                                         # Connected User Experiences and Telemetry
     "DisplayEnhancementService"                         # Display Enhancement Service
@@ -155,7 +156,6 @@ $DisabledServices = @(
     "NcaSvc"                                            # Network Connectivity Assistant
     "NcdAutoSetup"                                      # Network Connected Devices Auto-Setup
     "Netlogon"                                          # Netlogon
-    "NetTcpPortSharing"                                 # Net.Tcp Port Sharing Service
     "PcaSvc"                                            # Program Compatibility Assistant Service
     "perceptionsimulation"                              # Windows Perception Simulation Service
     "PhoneSvc"                                          # Phone Service
@@ -199,6 +199,7 @@ $DisabledServices = @(
     "tzautoupdate"                                      # Auto Time Zone Updater
     "UmRdpService"                                      # Remote Desktop Services UserMode Port Redirector
     "upnphost"                                          # UPnP Device Host
+    "WaaSMedicSvc"                                      # WaaSMedicSvc
     "WalletService"                                     # WalletService
     "WarpJITSvc"                                        # Warp JIT Service
     "wbengine"                                          # Block Level Backup Engine Service
@@ -219,7 +220,6 @@ $DisabledServices = @(
     "WManSvc"                                           # Windows Management Service
     "wmiApSrv"                                          # WMI Performance Adapter
     "WMPNetworkSvc"                                     # Windows Media Player Network Sharing Service
-    "workfolderssvc"                                    # Work Folders
     "WpcMonSvc"                                         # Parental Controls
     "WPDBusEnum"                                        # Portable Device Enumerator Service
     "WSAIFabricSvc"                                     # WSAIFabricSvc
@@ -229,12 +229,11 @@ $DisabledServices = @(
     "XblGameSave"                                       # Xbox Live Game Save
     "XboxGipSvc"                                        # Xbox Accessory Management Service
     "XboxNetApiSvc"                                     # Xbox Live Networking Service
-    "ZTHELPER"                                          # ZTDNS Helper service
 )
 #########################################################
 
 #########################################################
-# STEP 5 - Add or remove packages and apps to be uninstalled (ref: https://github.com/Raphire/Win11Debloat/blob/master/Appslist.txt)
+# STEP 5 - Add or remove packages and apps to be uninstalled (ref: https://github.com/Raphire/Win11Debloat/blob/master/Apps.json)
 $UninstalledPackages = @(
     "Clipchamp.Clipchamp"                               # Video editor from Microsoft
     "Microsoft.3DBuilder"                               # Basic 3D modeling software
@@ -253,6 +252,7 @@ $UninstalledPackages = @(
     "Microsoft.GamingApp"                               # Modern Xbox Gaming App, required for installing some PC games
     "Microsoft.GetHelp"                                 # Required for some Windows 11 Troubleshooters and support interactions
     "Microsoft.Getstarted"                              # Tips and introductory guide for Windows (Cannot be uninstalled in Windows 11)
+    "Microsoft.M365Companions"                          # Microsoft 365 mini-apps
     "Microsoft.Messaging"                               # Messaging app, often integrates with Skype (Largely deprecated)
     "Microsoft.Microsoft3DViewer"                       # Viewer for 3D models
     "Microsoft.MicrosoftJournal"                        # Digital note-taking app optimized for pen input
@@ -612,12 +612,17 @@ Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCa
 
 # Temporary files
 @(
+    "$env:LocalAppData\Microsoft\Windows\WER\ReportArchive"
+    "$env:LocalAppData\Microsoft\Windows\WER\ReportQueue"
     "$env:LocalAppData\Temp"
     "$env:ProgramData\Microsoft\Windows\DeliveryOptimization\Cache"
     "$env:ProgramData\Microsoft\Windows\WSUS\UpdateServicesPackages"
+    "$env:SystemDrive\MSOCache"
+    "$env:SystemDrive\Windows.old"
     "$env:SystemRoot\Logs"
     "$env:SystemRoot\Minidump"
     "$env:SystemRoot\Prefetch"
+    "$env:SystemRoot\SoftwareDistribution\DeliveryOptimization"
     "$env:SystemRoot\SoftwareDistribution\Download"
     "$env:SystemRoot\Temp"
     "$env:UserProfile\AppData\Local\CrashDumps"
@@ -972,9 +977,9 @@ Write-Custom "Successfully disabled Background Access for UWP applications"
 
 # Registry helpers
 # Disable Settings > Accounts > Sign-in options > Use my sign-in info to automatically finish setting up after an update or restart
-Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\UserARSO' | ForEach-Object { Set-ItemProperty -Path $_.PsPath -Name OptOut -Type "DWord" -Value 1 }
+$p = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\UserARSO"; if (Test-Path $p) { Get-ChildItem $p | ForEach-Object { Set-ItemProperty -Path $_.PsPath -Name OptOut -Type "DWord" -Value 1 } }
 # Disable Settings > Apps > Advanced app settings > Archive apps
-Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\InstallService\Stubification' | ForEach-Object { Set-ItemProperty -Path $_.PsPath -Name EnableAppOffloading -Type "DWord" -Value 0 }
+$p = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\InstallService\Stubification"; if (Test-Path $p) { Get-ChildItem $p | ForEach-Object { Set-ItemProperty -Path $_.PsPath -Name EnableAppOffloading -Type "DWord" -Value 0 } }
 # Disable Settings > Personalization > Device usage > *
 $SubscribedContents = (Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" | Get-Member -MemberType NoteProperty | Where-Object Name -like "SubscribedContent-*Enabled" | ForEach-Object { "`"$($_.Name)`"=dword:00000000" }) -join "`n"
 
