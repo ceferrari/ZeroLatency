@@ -199,7 +199,6 @@ $DisabledServices = @(
     "tzautoupdate"                                      # Auto Time Zone Updater
     "UmRdpService"                                      # Remote Desktop Services UserMode Port Redirector
     "upnphost"                                          # UPnP Device Host
-    "WaaSMedicSvc"                                      # WaaSMedicSvc
     "WalletService"                                     # WalletService
     "WarpJITSvc"                                        # Warp JIT Service
     "wbengine"                                          # Block Level Backup Engine Service
@@ -622,7 +621,6 @@ Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCa
     "$env:SystemRoot\Logs"
     "$env:SystemRoot\Minidump"
     "$env:SystemRoot\Prefetch"
-    "$env:SystemRoot\SoftwareDistribution\DeliveryOptimization"
     "$env:SystemRoot\SoftwareDistribution\Download"
     "$env:SystemRoot\Temp"
     "$env:UserProfile\AppData\Local\CrashDumps"
