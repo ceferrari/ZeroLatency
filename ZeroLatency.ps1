@@ -40,7 +40,7 @@ $Win32PrioSep = 36      # Win32PrioritySeparation          X = Decimal value to 
 
 # STEP 1 - Variables to modify (network basic)
 $NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
-$DNSProvider = 1        # Domain Name System Provider      1 = Cloudflare, 2 = Google
+$DNSProvider = 1        # Domain Name System Provider      0 = Auto (DHCP), 1 = Cloudflare, 2 = Google
 $RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8; may vary by NIC)
 $TBuffers = 64          # Transmit Buffers                 64 = Min, 4096 = Max (Increments of 8; may vary by NIC)
 $Offloads = 3           # Checksum Offloads                0 = Off, 1 = Tx only, 2 = Rx only, 3 = Both
@@ -884,9 +884,13 @@ $AdapterProperties = @(
 Get-NetAdapter -Physical | Where-Object { $_.InterfaceType -eq 6 } | ForEach-Object {
     $Adapter = $_
     @("ipv4", "ipv6") | ForEach-Object {
-        $X = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$X store=persistent"; Invoke-Custom $X; $NetshCommands += "$X`n"
-        $Y = "netsh int $_ set dns $($Adapter.ifIndex) static $($DNS["$_-1"]) primary"; Invoke-Custom $Y; $NetshCommands += "$Y`n"
-        $Z = "netsh int $_ add dns $($Adapter.ifIndex) $($DNS["$_-2"]) index=2"; Invoke-Custom $Z; $NetshCommands += "$Z`n"
+        $W = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$W store=persistent"; Invoke-Custom $W; $NetshCommands += "$W`n"
+        if ($DNSProvider -eq 0) {
+            $X = "netsh int $_ set dns $($Adapter.ifIndex) dhcp"; Invoke-Custom $X; $NetshCommands += "$X`n"
+        } else {
+            $Y = "netsh int $_ set dns $($Adapter.ifIndex) static $($DNS["$_-1"]) primary"; Invoke-Custom $Y; $NetshCommands += "$Y`n"
+            $Z = "netsh int $_ add dns $($Adapter.ifIndex) $($DNS["$_-2"]) index=2"; Invoke-Custom $Z; $NetshCommands += "$Z`n"
+        }
     }
     Invoke-Custom "Reset-NetAdapterAdvancedProperty -NoRestart -Name '$($Adapter.Name)' -DisplayName '*'"
     Invoke-Custom "Get-NetAdapterBinding -Name '$($Adapter.Name)' | Where-Object { `$_.ComponentID -notin @('ms_tcpip', 'ms_tcpip6') } | Disable-NetAdapterBinding"
