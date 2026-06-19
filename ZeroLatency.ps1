@@ -536,7 +536,7 @@ $DNS = @{
 }[$DNSProvider]
 
 # Maximum Transmission Unit (576 = Min, 1500 = Max - Common values: 1500 for Ethernet, 1492 for PPPoE, 1472 for VPN)
-$MTU = 1500..576 | Where-Object { ping $DNS["ipv4-1"] -f -l ($_-28) -n 1 -w 300 | Select-String "TTL" } | Select-Object -First 1
+$MTU = 1500..576 | Where-Object { ping "1.1.1.1" -f -l ($_-28) -n 1 -w 300 | Select-String "TTL" } | Select-Object -First 1
 
 # Maximum Segment Size (MTU minus 40 bytes for TCP/IP header minus 0 or 12 bytes for TCP Options)
 $MSS = $MTU - 40 - ($TCPOptions -le 1 ? 0 : 12)
