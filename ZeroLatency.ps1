@@ -39,8 +39,8 @@ $Win32PrioSep = 36      # Win32PrioritySeparation          X = Decimal value to 
                         # - https://www.youtube.com/watch?v=5MF8XjDdr64
 
 # STEP 1 - Variables to modify (network basic)
-$NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
 $DNSProvider = 1        # Domain Name System Provider      0 = Auto (DHCP), 1 = Cloudflare, 2 = Google
+$NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
 $RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8; may vary by NIC)
 $TBuffers = 64          # Transmit Buffers                 64 = Min, 4096 = Max (Increments of 8; may vary by NIC)
 $Offloads = 3           # Checksum Offloads                0 = Off, 1 = Tx only, 2 = Rx only, 3 = Both
