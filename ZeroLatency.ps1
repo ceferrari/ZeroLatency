@@ -48,6 +48,7 @@ $RSSQueues = 4          # Number of RSS Queues             0 = Off, X = Number o
 $RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.g., 0, 2, 4, 6... with HT/SMT on; 0, 1, 2, 3... otherwise), -1 = Assign from last core backwards
 
 # STEP 1 - Variables to modify (network advanced)
+$CongestionControl = 0  # Congestion Control Provider      0 = BBR2, 1 = CTCP, 2 = CUBIC
 $AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental
 $TCPOptions = 1         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
 $TCPRetries = 2         # TCP Retransmission Limits        2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
@@ -432,6 +433,13 @@ $OptionalFeatures = @(
 # Number of *physical* cores of the CPU (e.g., 6 for a 6C/12T model)
 $NumCores = (Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum
 
+# Congestion Control Provider
+$CCP = @{
+    0 = "bbr2"
+    1 = "ctcp"
+    2 = "cubic"
+}
+
 # TCP Auto-Tuning Level
 $ATL = @{
     0 = "disabled"
@@ -802,7 +810,7 @@ $AdapterProperties = @(
     "netsh int ip set global groupforwardedfragments=disabled"
     "netsh int ip set global icmpredirects=disabled"
     "netsh int ip set global loopbackexecutionmode=inline"
-    "netsh int ip set global loopbacklargemtu=$($AutoTuning -gt 0 ? 'enabled' : 'disabled')"
+    "netsh int ip set global loopbacklargemtu=$($CongestionControl -gt 0 ? 'enabled' : 'disabled')"
     "netsh int ip set global loopbackworkercount=$($NumCores - 2)"
     "netsh int ip set global mediasenseeventlog=disabled"
     "netsh int ip set global minmtu=576"
@@ -825,7 +833,7 @@ $AdapterProperties = @(
     "netsh int ipv6 set global slaacprivacylevel=0"
     "netsh int tcp set global autotuninglevel=$($ATL[$AutoTuning])"
     "netsh int tcp set global dca=enabled"
-    "netsh int tcp set global ecncapability=disabled"
+    "netsh int tcp set global ecncapability=$($CongestionControl -gt 0 ? 'disabled' : 'enabled')"
     "netsh int tcp set global fastopen=enabled"
     "netsh int tcp set global fastopenfallback=enabled"
     "netsh int tcp set global hystart=disabled"
@@ -840,7 +848,7 @@ $AdapterProperties = @(
     "netsh int tcp set heuristics forcews=disabled wsh=disabled"
     "netsh int tcp set security mpp=disabled"
     "netsh int tcp set security profiles=disabled"
-    "netsh int tcp set supplemental {template} congestionprovider=$($AutoTuning -gt 0 ? 'cubic' : 'bbr2')"
+    "netsh int tcp set supplemental {template} congestionprovider=$($CCP[$CongestionControl])"
     "netsh int tcp set supplemental {template} delayedackfrequency=1"
     "netsh int tcp set supplemental {template} delayedacktimeout=10"
     "netsh int tcp set supplemental {template} enablecwndrestart=disabled"
