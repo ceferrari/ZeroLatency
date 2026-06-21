@@ -39,6 +39,7 @@ $Win32PrioSep = 36      # Win32PrioritySeparation          X = Decimal value to 
                         # - https://www.youtube.com/watch?v=5MF8XjDdr64
 
 # STEP 1 - Variables to modify (network basic)
+$SQMRouter = 0          # Smart Queue Management Router    0 = No, 1 = Yes
 $DNSProvider = 1        # Domain Name System Provider      0 = Auto (DHCP), 1 = Cloudflare, 2 = Google
 $NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
 $RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8; may vary by NIC)
@@ -833,7 +834,7 @@ $AdapterProperties = @(
     "netsh int ipv6 set global slaacprivacylevel=0"
     "netsh int tcp set global autotuninglevel=$($ATL[$AutoTuning])"
     "netsh int tcp set global dca=enabled"
-    "netsh int tcp set global ecncapability=$($CongestionControl -gt 0 ? 'disabled' : 'enabled')"
+    "netsh int tcp set global ecncapability=$($SQMRouter -gt 0 ? 'enabled' : 'disabled')"
     "netsh int tcp set global fastopen=enabled"
     "netsh int tcp set global fastopenfallback=enabled"
     "netsh int tcp set global hystart=disabled"
