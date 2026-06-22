@@ -434,9 +434,15 @@ $NumCores = (Get-CimInstance Win32_Processor | Measure-Object -Property NumberOf
 # Advanced network settings
 $CCProvider = 1         # Congestion Control Provider      1 = BBR2, 2 = CTCP, 3 = CUBIC
 $TCPOptions = 3         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
-$TCPRetries = 2         # TCP Retransmission Limits        2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
-$ReassemOOL = 32        # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
-$InitialRTO = 2000      # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
+$TCPRetries = 2         # TCP Retransmission Tries         2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
+$InitialRTO = 300       # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
+$ReassemOOL = 16        # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
+
+if ($CCProvider -gt 1) {
+    $TCPRetries = 5
+    $InitialRTO = 500
+    $ReassemOOL = 32
+}
 
 # Test targets for measuring RTT and MTU
 $Targets = @(
