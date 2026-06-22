@@ -475,7 +475,7 @@ $MTU = $Targets | Select-Object -Last 6 | ForEach-Object {
         }
     }
     $Min
-} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
+} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum | ForEach-Object { [int]$_ }
 if ($null -eq $MTU) { throw "MTU discovery failed!" }
 
 # Maximum Segment Size (MTU minus 40 bytes for TCP/IP header)
