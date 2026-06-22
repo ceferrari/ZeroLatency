@@ -40,8 +40,8 @@ $Win32PrioSep = 36      # Win32PrioritySeparation          X = Decimal value to 
 
 # STEP 1 - Variables to modify (network)
 $Bandwidth = 500        # Bandwidth in Megabits per Sec.   X = Value of your internet connection speed (e.g., 500 for 500Mbps or 1000 for 1Gbps)
-$SQMRouter = 0          # Smart Queue Management Router    0 = No, 1 = Yes (Used to enable or disable ECN Capability)
-$AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental
+$SQMRouter = 0          # Smart Queue Management Router    0 = No, 1 = Yes (Used to configure Congestion Control Provider and ECN Capability)
+$AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental (With SQM: try 1, 2, 3)
 $DNSProvider = 1        # Domain Name System Provider      0 = Auto (DHCP), 1 = Cloudflare, 2 = Google, 3 = OpenDNS, 4 = NextDNS, 5 = Quad9, 6 = AdGuard
 $NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
 $RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8; may vary by NIC)
@@ -433,15 +433,25 @@ $NumCores = (Get-CimInstance Win32_Processor | Measure-Object -Property NumberOf
 
 # Advanced network settings
 $CCProvider = 1         # Congestion Control Provider      1 = BBR2, 2 = CTCP, 3 = CUBIC
+$PacProfile = 2         # Pacing Profile                   0 = Off, 1 = Default, 2 = Initial Window, 3 = Slow Start, 4 = Always
 $TCPOptions = 3         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
 $TCPRetries = 2         # TCP Retransmission Tries         2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
 $InitialRTO = 300       # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
 $ReassemOOL = 16        # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
 
-if ($CCProvider -gt 1) {
-    $TCPRetries = 5
-    $InitialRTO = 500
-    $ReassemOOL = 32
+# With SQM, CAKE controls queueing, so CUBIC is preferred for latency consistency, while BBR2 may introduce bandwidth probing variation and cause spikes
+# Without SQM, if the congestion control provider is set to CTCP or CUBIC, then the Pacing Profile should be set to "Always" for optimal performance
+# - SQM 0 + BBR2  = Pacing Profile Initial Window
+# - SQM 0 + CTCP  = Pacing Profile Always
+# - SQM 0 + CUBIC = Pacing Profile Always
+# - SQM 1 + BBR2  = Pacing Profile Off
+# - SQM 1 + CTCP  = Pacing Profile Off
+# - SQM 1 + CUBIC = Pacing Profile Off
+if ($SQMRouter -eq 1) {
+    $CCProvider = 3
+    $PacProfile = 0
+} elseif ($CCProvider -gt 1) {
+    $PacProfile = 4
 }
 
 # Test targets for measuring RTT and MTU
@@ -457,10 +467,10 @@ $Targets = @(
     "94.140.14.14"
 )
 
-# Round Trip Time (In milliseconds, Maximum measured latency)
+# Round Trip Time (In milliseconds, Average measured latency)
 $RTT = $Targets | Select-Object -First 6 | ForEach-Object {
     Test-Connection $_ -Count 3 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Latency
-} | Measure-Object -Maximum | ForEach-Object { [math]::Round($_.Maximum) }
+} | Measure-Object -Average | ForEach-Object { [math]::Round($_.Average) }
 if ($null -eq $RTT) { throw "RTT discovery failed!" }
 
 # Maximum Transmission Unit (Common values: 1500 for Ethernet, 1492 for PPPoE, 1472 for VPN)
@@ -496,6 +506,15 @@ $CCP = @{
     1 = "bbr2"
     2 = "ctcp"
     3 = "cubic"
+}
+
+# TCP Pacing Profile Level
+$PPL = @{
+    0 = "off"
+    1 = "default"
+    2 = "initialwindow"
+    3 = "slowstart"
+    4 = "always"
 }
 
 # TCP Auto-Tuning Level
@@ -907,7 +926,7 @@ $AdapterProperties = @(
     "netsh int tcp set global initialrto=$($InitialRTO)"
     "netsh int tcp set global maxsynretransmissions=$($TCPRetries)"
     "netsh int tcp set global nonsackrttresiliency=disabled"
-    "netsh int tcp set global pacingprofile=off"
+    "netsh int tcp set global pacingprofile=$($PPL[$PacProfile])"
     "netsh int tcp set global prr=enabled"
     "netsh int tcp set global rsc=disabled"
     "netsh int tcp set global rss=$($RSSQueues -gt 0 ? 'enabled' : 'disabled')"
