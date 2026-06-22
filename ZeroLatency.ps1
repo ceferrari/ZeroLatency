@@ -35,14 +35,14 @@ $Win32PrioSep = 36      # Win32PrioritySeparation          X = Decimal value to 
                         # - 21 Dec = 15 Hex → F.B. Medium
                         # - 20 Dec = 14 Hex → F.B. None
                         # References
-                        # - https://www.youtube.com/watch?v=bqDMG1ZS-Yw
-                        # - https://www.youtube.com/watch?v=5MF8XjDdr64
+                        # - https://youtu.be/bqDMG1ZS-Yw
+                        # - https://youtu.be/5MF8XjDdr64
 
 # STEP 1 - Variables to modify (network)
 $Bandwidth = 500        # Bandwidth in Megabits per Sec.   X = Value of your internet connection speed (e.g., 500 for 500Mbps or 1000 for 1Gbps)
 $SQMRouter = 0          # Smart Queue Management Router    0 = No, 1 = Yes (Used to configure Congestion Control Provider and ECN Capability)
 $AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental (With SQM: try 1, 2, 3)
-$DNSProvider = 1        # Domain Name System Provider      0 = Auto (DHCP), 1 = Cloudflare, 2 = Google, 3 = OpenDNS, 4 = NextDNS, 5 = Quad9, 6 = AdGuard
+$DNSProvider = 1        # Domain Name System Provider      0 = Auto (DHCP), 1 = Cloudflare, 2 = Google, 3 = OpenDNS, 4 = NextDNS, 5 = Quad9, 6 = AdGuard, 7 = ControlD, 8 = Gcore
 $NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
 $RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8; may vary by NIC)
 $TBuffers = 64          # Transmit Buffers                 64 = Min, 4096 = Max (Increments of 8; may vary by NIC)
@@ -563,6 +563,18 @@ $DNS = @{
         "ipv4-2" = "94.140.15.15"
         "ipv6-1" = "2a10:50c0::ad1:ff"
         "ipv6-2" = "2a10:50c0::ad2:ff"
+    }
+    7 = @{ # ControlD
+        "ipv4-1" = "76.76.2.0"
+        "ipv4-2" = "76.76.10.0"
+        "ipv6-1" = "2606:1a40::"
+        "ipv6-2" = "2606:1a40:1::"
+    }
+    8 = @{ # Gcore
+        "ipv4-1" = "95.85.95.85"
+        "ipv4-2" = "2.56.220.2"
+        "ipv6-1" = "2a03:90c0::1"
+        "ipv6-2" = "2a03:90c0::2"
     }
 }[$DNSProvider]
 
