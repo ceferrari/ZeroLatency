@@ -38,23 +38,17 @@ $Win32PrioSep = 36      # Win32PrioritySeparation          X = Decimal value to 
                         # - https://www.youtube.com/watch?v=bqDMG1ZS-Yw
                         # - https://www.youtube.com/watch?v=5MF8XjDdr64
 
-# STEP 1 - Variables to modify (network basic)
-$SQMRouter = 0          # Smart Queue Management Router    0 = No, 1 = Yes
-$DNSProvider = 1        # Domain Name System Provider      0 = Auto (DHCP), 1 = Cloudflare, 2 = Google
+# STEP 1 - Variables to modify (network)
+$Bandwidth = 500        # Bandwidth in Megabits per Sec.   X = Value of your internet connection speed (e.g., 500 for 500Mbps or 1000 for 1Gbps)
+$SQMRouter = 0          # Smart Queue Management Router    0 = No, 1 = Yes (Used to enable or disable ECN Capability)
+$AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental
+$DNSProvider = 1        # Domain Name System Provider      0 = Auto (DHCP), 1 = Cloudflare, 2 = Google, 3 = OpenDNS, 4 = NextDNS, 5 = Quad9, 6 = AdGuard
 $NICBrand = 1           # Network Interface Card Brand     1 = Realtek, 2 = Intel
 $RBuffers = 32          # Receive Buffers                  32 = Min, 4096 = Max (Increments of 8; may vary by NIC)
 $TBuffers = 64          # Transmit Buffers                 64 = Min, 4096 = Max (Increments of 8; may vary by NIC)
 $Offloads = 3           # Checksum Offloads                0 = Off, 1 = Tx only, 2 = Rx only, 3 = Both
 $RSSQueues = 4          # Number of RSS Queues             0 = Off, X = Number of RSS Queues (Available values: 1, 2, 4; may vary by NIC)
 $RSSCore = 4            # Core to start assigning Queues   X = Physical core (e.g., 0, 2, 4, 6... with HT/SMT on; 0, 1, 2, 3... otherwise), -1 = Assign from last core backwards
-
-# STEP 1 - Variables to modify (network advanced)
-$CongestionControl = 0  # Congestion Control Provider      0 = BBR2, 1 = CTCP, 2 = CUBIC
-$AutoTuning = 0         # TCP Auto-Tuning Level            0 = Off, 1 = Normal, 2 = Restricted, 3 = HighlyRestricted, 4 = Experimental
-$TCPOptions = 1         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
-$TCPRetries = 2         # TCP Retransmission Limits        2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
-$InitialRTO = 2000      # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
-$ROOLimit = 10          # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
 #########################################################
 
 #########################################################
@@ -431,14 +425,71 @@ $OptionalFeatures = @(
     "WorkFolders-Client"
 )
 
+# Suppress progress bars
+$ProgressPreference = "SilentlyContinue"
+
 # Number of *physical* cores of the CPU (e.g., 6 for a 6C/12T model)
 $NumCores = (Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum
 
+# Advanced network settings
+$CCProvider = 1         # Congestion Control Provider      1 = BBR2, 2 = CTCP, 3 = CUBIC
+$TCPOptions = 3         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
+$TCPRetries = 2         # TCP Retransmission Limits        2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
+$ReassemOOL = 32        # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
+$InitialRTO = 2000      # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
+
+# Test targets for measuring RTT and MTU
+$Targets = @(
+    "fast.com"
+    "github.com"
+    "download.microsoft.com"
+    "1.1.1.1"
+    "8.8.8.8"
+    "208.67.222.222"
+    "45.90.28.0"
+    "9.9.9.9"
+    "94.140.14.14"
+)
+
+# Round Trip Time (In milliseconds, Maximum measured latency)
+$RTT = $Targets | Select-Object -First 6 | ForEach-Object {
+    Test-Connection $_ -Count 3 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Latency
+} | Measure-Object -Maximum | ForEach-Object { [math]::Round($_.Maximum) }
+if ($null -eq $RTT) { throw "RTT discovery failed!" }
+
+# Maximum Transmission Unit (Common values: 1500 for Ethernet, 1492 for PPPoE, 1472 for VPN)
+$MTU = $Targets | Select-Object -Last 6 | ForEach-Object {
+    $Min, $Max = 576, 1500
+    while ($Max - $Min -gt 1) {
+        $MTU = ($Min + $Max) -shr 1
+        if ((Get-CimInstance Win32_PingStatus -Filter "Address='$_' and BufferSize=$($MTU-28) and NoFragmentation=true").StatusCode -eq 0) {
+            $Min = $MTU
+        } else {
+            $Max = $MTU
+        }
+    }
+    $Min
+} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
+if ($null -eq $MTU) { throw "MTU discovery failed!" }
+
+# Maximum Segment Size (MTU minus 40 bytes for TCP/IP header)
+$MSS = $MTU - 40
+
+# Bandwidth Delay Product (Bandwidth * Round Trip Time * Safety Factor)
+$BDP = ($Bandwidth * 1000000 / 8) * ($RTT / 1000) * 1.5
+
+# TCP Window Size (Rounded up to the nearest clean multiple of MSS)
+$TWS = [math]::Pow(2, [math]::Ceiling([math]::Log2($BDP)))
+$TWS = [math]::Ceiling($TWS / $MSS) * $MSS
+
+# Auxiliary variables
+$NetshCommands = ""
+
 # Congestion Control Provider
 $CCP = @{
-    0 = "bbr2"
-    1 = "ctcp"
-    2 = "cubic"
+    1 = "bbr2"
+    2 = "ctcp"
+    3 = "cubic"
 }
 
 # TCP Auto-Tuning Level
@@ -449,6 +500,46 @@ $ATL = @{
     3 = "highlyrestricted"
     4 = "experimental"
 }
+
+# DNS Providers
+$DNS = @{
+    1 = @{ # Cloudflare
+        "ipv4-1" = "1.1.1.1"
+        "ipv4-2" = "1.0.0.1"
+        "ipv6-1" = "2606:4700:4700::1111"
+        "ipv6-2" = "2606:4700:4700::1001"
+    }
+    2 = @{ # Google
+        "ipv4-1" = "8.8.8.8"
+        "ipv4-2" = "8.8.4.4"
+        "ipv6-1" = "2001:4860:4860::8888"
+        "ipv6-2" = "2001:4860:4860::8844"
+    }
+    3 = @{ # OpenDNS
+        "ipv4-1" = "208.67.222.222"
+        "ipv4-2" = "208.67.220.220"
+        "ipv6-1" = "2620:119:35::35"
+        "ipv6-2" = "2620:119:53::53"
+    }
+    4 = @{ # NextDNS
+        "ipv4-1" = "45.90.28.0"
+        "ipv4-2" = "45.90.30.0"
+        "ipv6-1" = "2a07:a8c0::"
+        "ipv6-2" = "2a07:a8c1::"
+    }
+    5 = @{ # Quad9
+        "ipv4-1" = "9.9.9.9"
+        "ipv4-2" = "149.112.112.112"
+        "ipv6-1" = "2620:fe::fe"
+        "ipv6-2" = "2620:fe::9"
+    }
+    6 = @{ # AdGuard
+        "ipv4-1" = "94.140.14.14"
+        "ipv4-2" = "94.140.15.15"
+        "ipv6-1" = "2a10:50c0::ad1:ff"
+        "ipv6-2" = "2a10:50c0::ad2:ff"
+    }
+}[$DNSProvider]
 
 # NIC Advanced Properties
 # Get-NetAdapterAdvancedProperty -AllProperties |
@@ -519,37 +610,6 @@ $NIC = @{
         "WolShutdownLinkSpeed" = 2
     }
 }[$NICBrand]
-
-# DNS Providers
-$DNS = @{
-    1 = @{ # Cloudflare
-        "ipv4-1" = "1.1.1.1"
-        "ipv4-2" = "1.0.0.1"
-        "ipv6-1" = "2606:4700:4700::1111"
-        "ipv6-2" = "2606:4700:4700::1001"
-    }
-    2 = @{ # Google
-        "ipv4-1" = "8.8.8.8"
-        "ipv4-2" = "8.8.4.4"
-        "ipv6-1" = "2001:4860:4860::8888"
-        "ipv6-2" = "2001:4860:4860::8844"
-    }
-}[$DNSProvider]
-
-# Maximum Transmission Unit (576 = Min, 1500 = Max - Common values: 1500 for Ethernet, 1492 for PPPoE, 1472 for VPN)
-$MTU = 1500..576 | Where-Object { ping "1.1.1.1" -f -l ($_-28) -n 1 -w 300 | Select-String "TTL" } | Select-Object -First 1
-
-# Maximum Segment Size (MTU minus 40 bytes for TCP/IP header minus 0 or 12 bytes for TCP Options)
-$MSS = $MTU - 40 - ($TCPOptions -le 1 ? 0 : 12)
-
-# TCP Window Size (Largest multiple of MSS that doesn't exceed 65535 - Limit defined by RFC 1323)
-$TWS = [math]::Floor(65535 / $MSS) * $MSS
-
-# Auxiliary variables
-$NetshCommands = ""
-
-# Suppress progress bars
-$ProgressPreference = "SilentlyContinue"
 
 # Functions
 function Invoke-Custom {
@@ -811,7 +871,7 @@ $AdapterProperties = @(
     "netsh int ip set global groupforwardedfragments=disabled"
     "netsh int ip set global icmpredirects=disabled"
     "netsh int ip set global loopbackexecutionmode=inline"
-    "netsh int ip set global loopbacklargemtu=$($CongestionControl -gt 0 ? 'enabled' : 'disabled')"
+    "netsh int ip set global loopbacklargemtu=$($CCProvider -gt 1 ? 'enabled' : 'disabled')"
     "netsh int ip set global loopbackworkercount=$($NumCores - 2)"
     "netsh int ip set global mediasenseeventlog=disabled"
     "netsh int ip set global minmtu=576"
@@ -821,8 +881,8 @@ $AdapterProperties = @(
     "netsh int ip set global multiplearpannounce=enabled"
     "netsh int ip set global neighborcachelimit=16384"
     "netsh int ip set global randomizeidentifiers=disabled"
-    "netsh int ip set global reassemblylimit=$([Math]::Pow(2, [Math]::Ceiling([Math]::Log2($MSS * $ROOLimit))))"
-    "netsh int ip set global reassemblyoutoforderlimit=$($ROOLimit)"
+    "netsh int ip set global reassemblylimit=$([Math]::Pow(2, [Math]::Ceiling([Math]::Log2((20 + $MSS) * $ReassemOOL))))"
+    "netsh int ip set global reassemblyoutoforderlimit=$($ReassemOOL)"
     "netsh int ip set global routecachelimit=16384"
     "netsh int ip set global routepolicies=disabled"
     "netsh int ip set global slaacmaxdadattempts=1"
@@ -849,7 +909,7 @@ $AdapterProperties = @(
     "netsh int tcp set heuristics forcews=disabled wsh=disabled"
     "netsh int tcp set security mpp=disabled"
     "netsh int tcp set security profiles=disabled"
-    "netsh int tcp set supplemental {template} congestionprovider=$($CCP[$CongestionControl])"
+    "netsh int tcp set supplemental {template} congestionprovider=$($CCP[$CCProvider])"
     "netsh int tcp set supplemental {template} delayedackfrequency=1"
     "netsh int tcp set supplemental {template} delayedacktimeout=10"
     "netsh int tcp set supplemental {template} enablecwndrestart=disabled"
@@ -1817,7 +1877,7 @@ $(Split-Registry -Content @"
 "EnableMulticastForwarding"=dword:00000000
 "EnablePMTUBHDetect"=dword:00000000
 "EnablePMTUDiscovery"=dword:00000001
-"GlobalMaxTcpWindowSize"=dword:$('{0:x8}' -f [uint32]$TWS)
+"GlobalMaxTcpWindowSize"=$(if ($AutoTuning -gt 0) {'-'} else {"dword:$('{0:x8}' -f [uint32]$TWS)"})
 "InitialRttData"=dword:$('{0:x8}' -f [uint32]$InitialRTO)
 "KeepAliveTime"=dword:000493e0
 "MaxConnectionsPerServer"=dword:00000000
@@ -1832,7 +1892,7 @@ $(Split-Registry -Content @"
 "TcpMaxDupAcks"=dword:0000000$($TCPRetries)
 "TcpNumConnections"=dword:00fffffe
 "TcpTimedWaitDelay"=dword:0000001e
-"TcpWindowSize"=dword:$('{0:x8}' -f [uint32]$TWS)
+"TcpWindowSize"=$(if ($AutoTuning -gt 0) {'-'} else {"dword:$('{0:x8}' -f [uint32]$TWS)"})
 
 ; Prevents QoS From Using Network Location Awareness
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\QoS]
