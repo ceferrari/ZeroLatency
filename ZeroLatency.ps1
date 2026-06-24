@@ -527,8 +527,7 @@ $MSS = $MTU - 40
 $BDP = ($Bandwidth * 1000000 / 8) * ($RTT / 1000) * 1.5
 
 # TCP Window Size (Rounded up to the nearest clean multiple of MSS)
-$TWS = [math]::Pow(2, [math]::Ceiling([math]::Log2($BDP)))
-$TWS = [math]::Ceiling($TWS / $MSS) * $MSS
+$TWS = [math]::Ceiling($BDP / $MSS) * $MSS
 
 # Advanced network settings
 $CCProvider = 1         # Congestion Control Provider      1 = BBR2, 2 = CTCP, 3 = CUBIC
@@ -536,7 +535,6 @@ $PacProfile = 2         # Pacing Profile                   0 = Off, 1 = Default,
 $TCPOptions = 3         # TCP Options                      0 = Off, 1 = Window Scaling, 2 = Timestamps, 3 = Both
 $TCPRetries = 2         # TCP Retransmission Tries         2 = Min, X = Value of TcpMaxDupAcks, TcpMaxConnectRetransmissions, TcpMaxDataRetransmissions, MaxSynRetransmissions
 $InitialRTO = 300       # Initial Retransmission Timeout   300 = Min, 65535 = Max (In milliseconds)
-$ReassemOOL = 16        # Reassembly Out of Order Limit    X = How many out-of-order packets TCP can store before reassembly
 
 # With SQM, CAKE controls queueing, so CUBIC is preferred for latency consistency, while BBR2 may introduce bandwidth probing variation and cause spikes
 # Without SQM, if the congestion control provider is set to CTCP or CUBIC, then the Pacing Profile should be set to "Always" for optimal performance
@@ -926,11 +924,11 @@ $AdapterProperties = @(
     "netsh int ip set global mldversion=version3"
     "netsh int ip set global multicastforwarding=disabled"
     "netsh int ip set global multiplearpannounce=enabled"
-    "netsh int ip set global neighborcachelimit=16384"
+    "netsh int ip set global neighborcachelimit=1024"
     "netsh int ip set global randomizeidentifiers=disabled"
-    "netsh int ip set global reassemblylimit=$([Math]::Pow(2, [Math]::Ceiling([Math]::Log2((20 + $MSS) * $ReassemOOL))))"
-    "netsh int ip set global reassemblyoutoforderlimit=$($ReassemOOL)"
-    "netsh int ip set global routecachelimit=16384"
+    "netsh int ip set global reassemblylimit=267748640"
+    "netsh int ip set global reassemblyoutoforderlimit=32"
+    "netsh int ip set global routecachelimit=65536"
     "netsh int ip set global routepolicies=disabled"
     "netsh int ip set global slaacmaxdadattempts=1"
     "netsh int ip set global sourcebasedecmp=enabled"
@@ -952,7 +950,7 @@ $AdapterProperties = @(
     "netsh int tcp set global prr=enabled"
     "netsh int tcp set global rsc=disabled"
     "netsh int tcp set global rss=$($RSSQueues -gt 0 ? 'enabled' : 'disabled')"
-    "netsh int tcp set global timestamps=$($TCPOptions -in 2, 3 ? 'enabled' : 'disabled')"
+    "netsh int tcp set global timestamps=$($TCPOptions -in 2, 3 ? 'allowed' : 'disabled')"
     "netsh int tcp set heuristics forcews=disabled wsh=disabled"
     "netsh int tcp set security mpp=disabled"
     "netsh int tcp set security profiles=disabled"
@@ -963,11 +961,11 @@ $AdapterProperties = @(
     "netsh int tcp set supplemental {template} icw=10"
     "netsh int tcp set supplemental {template} minrto=200"
     "netsh int tcp set supplemental {template} rack=enabled"
-    "netsh int tcp set supplemental {template} taillossprobe=disabled"
+    "netsh int tcp set supplemental {template} taillossprobe=enabled"
     "netsh int teredo set state disabled"
     "netsh int udp set global uro=disabled"
     "netsh int udp set global uso=disabled"
-    "netsh winsock set autotuning off"
+    "netsh winsock set autotuning on"
 ) | ForEach-Object {
     $X = $_
     if ($X -match "^netsh int ip") {
@@ -992,7 +990,7 @@ $AdapterProperties = @(
 Get-NetAdapter -Physical | Where-Object { $_.InterfaceType -eq 6 } | ForEach-Object {
     $Adapter = $_
     @("ipv4", "ipv6") | ForEach-Object {
-        $W = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=$MTU"; Invoke-Custom "$W store=persistent"; Invoke-Custom $W; $NetshCommands += "$W`n"
+        $W = "netsh int $_ set subinterface $($Adapter.ifIndex) mtu=1500"; Invoke-Custom "$W store=persistent"; Invoke-Custom $W; $NetshCommands += "$W`n"
         if ($DNSProvider -eq 0) {
             $X = "netsh int $_ set dns $($Adapter.ifIndex) dhcp"; Invoke-Custom $X; $NetshCommands += "$X`n"
         } else {
