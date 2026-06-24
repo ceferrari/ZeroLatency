@@ -965,7 +965,7 @@ $AdapterProperties = @(
     "netsh int teredo set state disabled"
     "netsh int udp set global uro=disabled"
     "netsh int udp set global uso=disabled"
-    "netsh winsock set autotuning on"
+    "netsh winsock set autotuning $($AutoTuning -gt 0 ? 'on' : 'off')"
 ) | ForEach-Object {
     $X = $_
     if ($X -match "^netsh int ip") {
