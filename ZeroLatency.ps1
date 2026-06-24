@@ -425,6 +425,59 @@ $OptionalFeatures = @(
     "WorkFolders-Client"
 )
 
+# Functions
+function Invoke-Custom {
+    param([string]$Command)
+    Write-Host "`n`e[0;36m==> `e[1;36m$Command`e[0m"
+    Invoke-Expression $Command
+}
+
+function Write-Custom {
+    param([string]$Text)
+    Write-Host "`n`e[0;34m==> `e[1;34m$Text`e[0m"
+}
+
+function New-Task {
+    param ([string]$Name, [string]$Command)
+    $Argument = "-NoProfile -ExecutionPolicy Bypass -Command `"& { $Command }`""
+    $Action = New-ScheduledTaskAction -Execute "pwsh" -Argument $Argument
+    $Trigger = New-ScheduledTaskTrigger -AtStartup
+    $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
+    Unregister-ScheduledTask -TaskName $Name -Confirm:$False -ErrorAction SilentlyContinue
+    Register-ScheduledTask -TaskName $Name -Action $Action -Trigger $Trigger -Principal $Principal -Force | Out-Null
+    Start-ScheduledTask -TaskName $Name
+}
+
+function Split-Registry {
+    param ([string]$Content)
+    $Pattern = "^\[.*\]$"
+    $Lines = $Content -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+    $Paths = $Lines | Where-Object { $_ -match $Pattern }
+    $Entries = $Lines | Where-Object { $_ -notmatch $Pattern }
+    return ($Paths | ForEach-Object { @($_) + $Entries -join "`n" }) -join "`n`n"
+}
+
+function Set-Registry {
+    param ([string]$Content)
+    $TempFile = [System.IO.Path]::GetTempFileName() + ".reg"
+    $Content | Out-File "$TempFile" -Encoding ASCII
+    reg import "$TempFile" > $Null 2>&1
+    Remove-Item "$TempFile" -Force
+}
+
+function Get-RSSCommand {
+    param([int]$RSSQueues, [int]$RSSCore, [int]$NumCores)
+    $Limit = $NumCores * 2 - 2
+    if ($RSSCore -eq -1) {
+        $Base = $NumCores * 2 - $RSSQueues * 2
+        $Max = $Limit
+    } else {
+        $Base = $Max = $RSSCore
+        if ($RSSQueues -gt 0) { $Max += ($RSSQueues - 1) * 2 }
+    }
+    return "Set-NetAdapterRss -Profile 'ClosestStatic' -NumberOfReceiveQueues $([Math]::Max(1, $RSSQueues)) -BaseProcessorNumber $([Math]::Min($Base, $Limit)) -MaxProcessorNumber $([Math]::Min($Max, $Limit)) -Enabled `$$($RSSQueues -gt 0)"
+}
+
 # Suppress progress bars
 $ProgressPreference = "SilentlyContinue"
 
@@ -646,59 +699,6 @@ $NIC = @{
         "WolShutdownLinkSpeed" = 2
     }
 }[$NICBrand]
-
-# Functions
-function Invoke-Custom {
-    param([string]$Command)
-    Write-Host "`n`e[0;36m==> `e[1;36m$Command`e[0m"
-    Invoke-Expression $Command
-}
-
-function Write-Custom {
-    param([string]$Text)
-    Write-Host "`n`e[0;34m==> `e[1;34m$Text`e[0m"
-}
-
-function New-Task {
-    param ([string]$Name, [string]$Command)
-    $Argument = "-NoProfile -ExecutionPolicy Bypass -Command `"& { $Command }`""
-    $Action = New-ScheduledTaskAction -Execute "pwsh" -Argument $Argument
-    $Trigger = New-ScheduledTaskTrigger -AtStartup
-    $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
-    Unregister-ScheduledTask -TaskName $Name -Confirm:$False -ErrorAction SilentlyContinue
-    Register-ScheduledTask -TaskName $Name -Action $Action -Trigger $Trigger -Principal $Principal -Force | Out-Null
-    Start-ScheduledTask -TaskName $Name
-}
-
-function Split-Registry {
-    param ([string]$Content)
-    $Pattern = "^\[.*\]$"
-    $Lines = $Content -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
-    $Paths = $Lines | Where-Object { $_ -match $Pattern }
-    $Entries = $Lines | Where-Object { $_ -notmatch $Pattern }
-    return ($Paths | ForEach-Object { @($_) + $Entries -join "`n" }) -join "`n`n"
-}
-
-function Set-Registry {
-    param ([string]$Content)
-    $TempFile = [System.IO.Path]::GetTempFileName() + ".reg"
-    $Content | Out-File "$TempFile" -Encoding ASCII
-    reg import "$TempFile" > $Null 2>&1
-    Remove-Item "$TempFile" -Force
-}
-
-function Get-RSSCommand {
-    param([int]$RSSQueues, [int]$RSSCore, [int]$NumCores)
-    $Limit = $NumCores * 2 - 2
-    if ($RSSCore -eq -1) {
-        $Base = $NumCores * 2 - $RSSQueues * 2
-        $Max = $Limit
-    } else {
-        $Base = $Max = $RSSCore
-        if ($RSSQueues -gt 0) { $Max += ($RSSQueues - 1) * 2 }
-    }
-    return "Set-NetAdapterRss -Profile 'ClosestStatic' -NumberOfReceiveQueues $([Math]::Max(1, $RSSQueues)) -BaseProcessorNumber $([Math]::Min($Base, $Limit)) -MaxProcessorNumber $([Math]::Min($Max, $Limit)) -Enabled `$$($RSSQueues -gt 0)"
-}
 
 # Disk Cleanup and Optimization
 $SagerunProfile = 5555
