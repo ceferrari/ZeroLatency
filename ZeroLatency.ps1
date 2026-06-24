@@ -431,6 +431,52 @@ $ProgressPreference = "SilentlyContinue"
 # Number of *physical* cores of the CPU (e.g., 6 for a 6C/12T model)
 $NumCores = (Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum
 
+# Test targets for measuring RTT and MTU
+$Targets = @(
+    "fast.com"
+    "github.com"
+    "download.microsoft.com"
+    "1.1.1.1"
+    "8.8.8.8"
+    "208.67.222.222"
+    "45.90.28.0"
+    "9.9.9.9"
+    "94.140.14.14"
+)
+
+# Round Trip Time (In milliseconds, Average measured latency)
+$RTT = $Targets | Select-Object -First 6 | ForEach-Object {
+    Test-Connection $_ -Count 3 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Latency
+} | Measure-Object -Average | ForEach-Object { [math]::Round($_.Average) }
+if ($null -eq $RTT) { throw "RTT discovery failed!" }
+Write-Custom "Successfully discovered RTT: $RTT ms"
+
+# Maximum Transmission Unit (Common values: 1500 for Ethernet, 1492 for PPPoE, 1472 for VPN)
+$MTU = $Targets | Select-Object -Last 6 | ForEach-Object {
+    $Min, $Max = 576, 1500
+    while ($Max - $Min -gt 1) {
+        $MTU = ($Min + $Max) -shr 1
+        if ((Get-CimInstance Win32_PingStatus -Filter "Address='$_' and BufferSize=$($MTU-28) and NoFragmentation=true").StatusCode -eq 0) {
+            $Min = $MTU
+        } else {
+            $Max = $MTU
+        }
+    }
+    $Min
+} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum | ForEach-Object { [int]$_ }
+if ($null -eq $MTU) { throw "MTU discovery failed!" }
+Write-Custom "Successfully discovered MTU: $MTU bytes"
+
+# Maximum Segment Size (MTU minus 40 bytes for TCP/IP header)
+$MSS = $MTU - 40
+
+# Bandwidth Delay Product (Bandwidth * Round Trip Time * Safety Factor)
+$BDP = ($Bandwidth * 1000000 / 8) * ($RTT / 1000) * 1.5
+
+# TCP Window Size (Rounded up to the nearest clean multiple of MSS)
+$TWS = [math]::Pow(2, [math]::Ceiling([math]::Log2($BDP)))
+$TWS = [math]::Ceiling($TWS / $MSS) * $MSS
+
 # Advanced network settings
 $CCProvider = 1         # Congestion Control Provider      1 = BBR2, 2 = CTCP, 3 = CUBIC
 $PacProfile = 2         # Pacing Profile                   0 = Off, 1 = Default, 2 = Initial Window, 3 = Slow Start, 4 = Always
@@ -453,53 +499,6 @@ if ($SQMRouter -eq 1) {
 } elseif ($CCProvider -gt 1) {
     $PacProfile = 4
 }
-
-# Test targets for measuring RTT and MTU
-$Targets = @(
-    "fast.com"
-    "github.com"
-    "download.microsoft.com"
-    "1.1.1.1"
-    "8.8.8.8"
-    "208.67.222.222"
-    "45.90.28.0"
-    "9.9.9.9"
-    "94.140.14.14"
-)
-
-# Round Trip Time (In milliseconds, Average measured latency)
-$RTT = $Targets | Select-Object -First 6 | ForEach-Object {
-    Test-Connection $_ -Count 3 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Latency
-} | Measure-Object -Average | ForEach-Object { [math]::Round($_.Average) }
-if ($null -eq $RTT) { throw "RTT discovery failed!" }
-
-# Maximum Transmission Unit (Common values: 1500 for Ethernet, 1492 for PPPoE, 1472 for VPN)
-$MTU = $Targets | Select-Object -Last 6 | ForEach-Object {
-    $Min, $Max = 576, 1500
-    while ($Max - $Min -gt 1) {
-        $MTU = ($Min + $Max) -shr 1
-        if ((Get-CimInstance Win32_PingStatus -Filter "Address='$_' and BufferSize=$($MTU-28) and NoFragmentation=true").StatusCode -eq 0) {
-            $Min = $MTU
-        } else {
-            $Max = $MTU
-        }
-    }
-    $Min
-} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum | ForEach-Object { [int]$_ }
-if ($null -eq $MTU) { throw "MTU discovery failed!" }
-
-# Maximum Segment Size (MTU minus 40 bytes for TCP/IP header)
-$MSS = $MTU - 40
-
-# Bandwidth Delay Product (Bandwidth * Round Trip Time * Safety Factor)
-$BDP = ($Bandwidth * 1000000 / 8) * ($RTT / 1000) * 1.5
-
-# TCP Window Size (Rounded up to the nearest clean multiple of MSS)
-$TWS = [math]::Pow(2, [math]::Ceiling([math]::Log2($BDP)))
-$TWS = [math]::Ceiling($TWS / $MSS) * $MSS
-
-# Auxiliary variables
-$NetshCommands = ""
 
 # Congestion Control Provider
 $CCP = @{
@@ -810,6 +809,7 @@ $OptionalFeatures | Where-Object { $_ } | ForEach-Object {
 
 # WinGet and PowerShell
 @(
+    "winget source update"
     "winget upgrade --all --accept-package-agreements --accept-source-agreements"
     "setx POWERSHELL_TELEMETRY_OPTOUT 1"
 ) | ForEach-Object {
