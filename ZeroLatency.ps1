@@ -951,7 +951,8 @@ $AdapterProperties = @(
     "netsh int tcp set global rsc=disabled"
     "netsh int tcp set global rss=$($RSSQueues -gt 0 ? 'enabled' : 'disabled')"
     "netsh int tcp set global timestamps=$($TCPOptions -in 2, 3 ? 'allowed' : 'disabled')"
-    "netsh int tcp set heuristics forcews=disabled wsh=disabled"
+    "netsh int tcp set heuristics forcews=disabled"
+    "netsh int tcp set heuristics wsh=disabled"
     "netsh int tcp set security mpp=disabled"
     "netsh int tcp set security profiles=disabled"
     "netsh int tcp set supplemental {template} congestionprovider=$($CCP[$CCProvider])"
@@ -1444,6 +1445,15 @@ $(Split-Registry -Content @"
 "NewTabPageHideDefaultTopSites"=dword:00000001
 "StartupBoostEnabled"=dword:00000000
 
+; Disable AppCompat (Application Compatibility)
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AppCompat]
+"AITEnable"=dword:00000000
+"DisableEngine"=dword:00000001
+"DisableInventory"=dword:00000001
+"DisablePCA"=dword:00000001
+"DisableUAR"=dword:00000001
+"SbEnable"=dword:00000000
+
 ; Disable App Archiving
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Appx]
 "AllowAutomaticAppArchiving"=dword:00000000
@@ -1851,6 +1861,7 @@ $(Split-Registry -Content @"
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters]
 "EnablePrefetcher"=dword:00000000
 "EnableSuperfetch"=dword:00000000
+"SfTracingState"=-
 
 "@
 Write-Custom "Successfully modified registry settings (Memory)"
