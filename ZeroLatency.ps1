@@ -1791,10 +1791,6 @@ $(Split-Registry -Content @"
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI\BootAnimation]
 "DisableStartupSound"=dword:00000001
 
-; Disable MPO (Multi-Plane Overlay)
-[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm]
-"OverlayTestMode"=dword:00000005
-
 ; Disable Windows Media Digital Rights Management
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\WMDRM]
 "DisableOnline"=dword:00000001
